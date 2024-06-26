@@ -77,14 +77,14 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/hashicorp/golang-lru/v2 v2.0.7
-	github.com/hashicorp/vault/api v1.12.0
+	github.com/hashicorp/vault/api v1.14.0
 	github.com/hashicorp/vault/api/auth/approle v0.2.0
 	github.com/hashicorp/vault/api/auth/aws v0.2.0
 	github.com/hashicorp/vault/api/auth/azure v0.2.0
 	github.com/hashicorp/vault/api/auth/gcp v0.5.0
 	github.com/hashicorp/vault/api/auth/kubernetes v0.2.0
 	github.com/hashicorp/vault/api/auth/ldap v0.2.0
-	github.com/hashicorp/vault/api/auth/userpass v0.6.0
+	github.com/hashicorp/vault/api/auth/userpass v0.7.0
 	github.com/heroku/x v0.0.61
 	github.com/iamseth/oracledb_exporter v0.0.0-20230918193147-95e16f21ceee
 	github.com/influxdata/go-syslog/v3 v3.0.1-0.20230911200830-875f5bc594a4
@@ -404,7 +404,7 @@ require (
 	github.com/gavv/monotime v0.0.0-20190418164738-30dba4353424 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
-	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
+	github.com/go-jose/go-jose/v4 v4.0.1 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
