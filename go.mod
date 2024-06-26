@@ -154,7 +154,7 @@ require (
 	github.com/prometheus/client_model v0.6.1
 	github.com/prometheus/common v0.53.0
 	github.com/prometheus/common/sigv4 v0.1.0
-	github.com/prometheus/consul_exporter v0.8.0
+	github.com/prometheus/consul_exporter v0.12.0
 	github.com/prometheus/memcached_exporter v0.13.0
 	github.com/prometheus/mysqld_exporter v0.14.0
 	github.com/prometheus/node_exporter v1.6.0
