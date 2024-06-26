@@ -166,7 +166,7 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0
 	github.com/rs/cors v1.11.0
 	github.com/scaleway/scaleway-sdk-go v1.0.0-beta.25
-	github.com/shirou/gopsutil/v3 v3.24.4
+	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/sijms/go-ora/v2 v2.7.6
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spaolacci/murmur3 v1.1.0
