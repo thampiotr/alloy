@@ -1900,8 +1900,8 @@ github.com/prometheus-community/prom-label-proxy v0.6.0 h1:vRY29tUex8qI2MEimovTz
 github.com/prometheus-community/prom-label-proxy v0.6.0/go.mod h1:XyAyskjjhqEx0qnbGUVeAkYSz3Wm9gStT7/wXFxD8n0=
 github.com/prometheus-community/stackdriver_exporter v0.15.1 h1:+k26zeBy8BlG+eDKPtYA7IKXrQCI7ISLfktjIUu7wBQ=
 github.com/prometheus-community/stackdriver_exporter v0.15.1/go.mod h1:UmmIgnrVQqDAeM8pSeYntBcUxPhp8oqb8W3nvRYzsSg=
-github.com/prometheus-community/windows_exporter v0.25.2-0.20240425065806-f6b91e5cb0f7 h1:Emm0HyHDw6d8IiySQb5mgS5oaW55ABBi8g+JMwYKrVw=
-github.com/prometheus-community/windows_exporter v0.25.2-0.20240425065806-f6b91e5cb0f7/go.mod h1:OffYQwEifotAHJdOKsdcCcMcgnKgSriW3t5y3bGEqfI=
+github.com/prometheus-community/windows_exporter v0.26.0-rc.2 h1:uCj87qjEIcD6ky4kB3DTiy4mRL/O0QHPzxsxKzpjkSY=
+github.com/prometheus-community/windows_exporter v0.26.0-rc.2/go.mod h1:nRWs+Si3kJ9y7k6Jj8CST7FnsQkEHiC9QS3A26Ffl9k=
 github.com/prometheus-operator/prometheus-operator v0.66.0 h1:Jj4mbGAkfBbTih6ait03f2vUjEHB7Kb4gnlAmWu7AJ0=
 github.com/prometheus-operator/prometheus-operator v0.66.0/go.mod h1:U7S3+u6YTxwCTMNIQxZWttEq70qBA4Qps7/c5mUZOpQ=
 github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring v0.66.0 h1:PPW01FLVjJHMNcbAL1DDD9EZceSQKMOU/VpK0irrxrI=
