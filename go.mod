@@ -193,9 +193,9 @@ require (
 	go.opentelemetry.io/collector/config/configretry v0.102.1
 	go.opentelemetry.io/collector/config/configtelemetry v0.102.1
 	go.opentelemetry.io/collector/config/configtls v0.102.1
-	go.opentelemetry.io/collector/confmap v0.102.1
+	go.opentelemetry.io/collector/confmap v0.103.0
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1
-	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1
+	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.103.0
 	go.opentelemetry.io/collector/connector v0.102.1
 	go.opentelemetry.io/collector/consumer v0.102.1
 	go.opentelemetry.io/collector/exporter v0.102.1
@@ -204,7 +204,7 @@ require (
 	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.102.1
 	go.opentelemetry.io/collector/extension v0.102.1
 	go.opentelemetry.io/collector/extension/auth v0.102.1
-	go.opentelemetry.io/collector/featuregate v1.9.0
+	go.opentelemetry.io/collector/featuregate v1.10.0
 	go.opentelemetry.io/collector/otelcol v0.102.1
 	go.opentelemetry.io/collector/pdata v1.9.0
 	go.opentelemetry.io/collector/processor v0.102.1
