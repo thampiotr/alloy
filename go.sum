@@ -2053,8 +2053,8 @@ github.com/shurcooL/vfsgen v0.0.0-20200824052919-0d455de96546 h1:pXY9qYc/MP5zdvq
 github.com/shurcooL/vfsgen v0.0.0-20200824052919-0d455de96546/go.mod h1:TrYk7fJVaAttu97ZZKrO9UbRa8izdowaMIZcxYMbVaw=
 github.com/siebenmann/go-kstat v0.0.0-20210513183136-173c9b0a9973 h1:GfSdC6wKfTGcgCS7BtzF5694Amne1pGCSTY252WhlEY=
 github.com/siebenmann/go-kstat v0.0.0-20210513183136-173c9b0a9973/go.mod h1:G81aIFAMS9ECrwBYR9YxhlPjWgrItd+Kje78O6+uqm8=
-github.com/sijms/go-ora/v2 v2.7.6 h1:QyR1CKFxG+VVk2+LdHoHF4NxDSvcQ3deBXtZCrahSq4=
-github.com/sijms/go-ora/v2 v2.7.6/go.mod h1:EHxlY6x7y9HAsdfumurRfTd+v8NrEOTR3Xl4FWlH6xk=
+github.com/sijms/go-ora/v2 v2.8.19 h1:7LoKZatDYGi18mkpQTR/gQvG9yOdtc7hPAex96Bqisc=
+github.com/sijms/go-ora/v2 v2.8.19/go.mod h1:EHxlY6x7y9HAsdfumurRfTd+v8NrEOTR3Xl4FWlH6xk=
 github.com/simonpasquier/klog-gokit v0.3.0/go.mod h1:+SUlDQNrhVtGt2FieaqNftzzk8P72zpWlACateWxA9k=
 github.com/simonpasquier/klog-gokit/v3 v3.4.0 h1:2eD2INbzUHuGNynPP86BCB8H6Lwfp6wlkOcuyTr3VWM=
 github.com/simonpasquier/klog-gokit/v3 v3.4.0/go.mod h1:RREVB5Cc6yYHsweRfhUyM1ZP+Odb8ehxLfY8jaiqvjg=
