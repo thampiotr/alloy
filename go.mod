@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.29.10
 	github.com/blang/semver/v4 v4.0.0
 	github.com/bmatcuk/doublestar v1.3.4
-	github.com/boynux/squid-exporter v1.10.5-0.20230618153315-c1fae094e18e
+	github.com/boynux/squid-exporter v1.12.0
 	github.com/burningalchemist/sql_exporter v0.0.0-20240103092044-466b38b6abc4
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
