@@ -16,9 +16,9 @@ require (
 	github.com/Shopify/sarama v1.38.1
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9
-	github.com/aws/aws-sdk-go-v2 v1.27.0
+	github.com/aws/aws-sdk-go-v2 v1.30.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.16
-	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.3
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.8
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.29.10
 	github.com/blang/semver/v4 v4.0.0
