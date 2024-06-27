@@ -2311,8 +2311,8 @@ go.opentelemetry.io/collector/config/configtls v0.102.1 h1:7fr+PU9BRg0HRc1Pn3WmD
 go.opentelemetry.io/collector/config/configtls v0.102.1/go.mod h1:KHdrvo3cwosgDxclyiLWmtbovIwqvaIGeTXr3p5721A=
 go.opentelemetry.io/collector/config/internal v0.102.1 h1:HFsFD3xpHUuNHb8/UTz5crJw1cMHzsJQf/86sgD44hw=
 go.opentelemetry.io/collector/config/internal v0.102.1/go.mod h1:Vig3dfeJJnuRe1kBNpszBzPoj5eYnR51wXbeq36Zfpg=
-go.opentelemetry.io/collector/confmap v0.102.1 h1:wZuH+d/P11Suz8wbp+xQCJ0BPE9m5pybtUe74c+rU7E=
-go.opentelemetry.io/collector/confmap v0.102.1/go.mod h1:KgpS7UxH5rkd69CzAzlY2I1heH8Z7eNCZlHmwQBMxNg=
+go.opentelemetry.io/collector/confmap v0.103.0 h1:qKKZyWzropSKfgtGv12JzADOXNgThqH1Vx6qzblBE24=
+go.opentelemetry.io/collector/confmap v0.103.0/go.mod h1:TlOmqe/Km3K6WgxyhEAdCb/V1Yp6eSU76fCoiluEa88=
 go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1 h1:s0RxnaABoRxtfvUeimZ0OOsF83wD/EK1tR2N5GZyst0=
 go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1/go.mod h1:ZwSMlOSIzmrrSSVNoMPDr21SQx7E52bZFMQJSOZ+EhY=
 go.opentelemetry.io/collector/confmap/provider/envprovider v0.102.1 h1:4KLw0pTChIqDfw0ckZ411aQDw98pu2dDOqgBHXfJm8M=
