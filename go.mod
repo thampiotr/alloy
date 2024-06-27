@@ -142,7 +142,7 @@ require (
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/prometheus-community/elasticsearch_exporter v1.5.0
+	github.com/prometheus-community/elasticsearch_exporter v1.7.0
 	github.com/prometheus-community/postgres_exporter v0.11.1
 	github.com/prometheus-community/stackdriver_exporter v0.15.1
 	github.com/prometheus-community/windows_exporter v0.25.2-0.20240425065806-f6b91e5cb0f7
@@ -304,7 +304,6 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0 // indirect
 	github.com/Workiva/go-datastructures v1.1.0 // indirect
 	github.com/alecthomas/participle/v2 v2.1.1 // indirect
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/apache/arrow/go/v12 v12.0.1 // indirect
 	github.com/apache/thrift v0.20.0 // indirect
@@ -694,7 +693,6 @@ require (
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240520151616-dc85e6b867a5 // indirect
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
