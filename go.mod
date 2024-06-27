@@ -212,7 +212,7 @@ require (
 	go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.102.1
 	go.opentelemetry.io/collector/receiver v0.102.1
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.102.1
-	go.opentelemetry.io/collector/semconv v0.102.1
+	go.opentelemetry.io/collector/semconv v0.103.0
 	go.opentelemetry.io/collector/service v0.102.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.45.0
 	go.opentelemetry.io/otel v1.27.0
