@@ -10,7 +10,7 @@ require (
 	github.com/Azure/go-autorest/autorest v0.11.29
 	github.com/IBM/sarama v1.43.2
 	github.com/KimMachineGun/automemlimit v0.6.0
-	github.com/Lusitaniae/apache_exporter v0.11.1-0.20220518131644-f9522724dab4
+	github.com/Lusitaniae/apache_exporter v1.0.8
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/PuerkitoBio/rehttp v1.4.0
 	github.com/Shopify/sarama v1.38.1
