@@ -137,7 +137,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v0.102.0
 	github.com/ory/dockertest/v3 v3.8.1
 	github.com/oschwald/geoip2-golang v1.9.0
-	github.com/oschwald/maxminddb-golang v1.11.0
+	github.com/oschwald/maxminddb-golang v1.13.1
 	github.com/percona/mongodb_exporter v0.39.1-0.20230706092307-28432707eb65
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/errors v0.9.1
