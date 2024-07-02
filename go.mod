@@ -189,10 +189,10 @@ require (
 	go.opentelemetry.io/collector/config/configgrpc v0.102.1
 	go.opentelemetry.io/collector/config/confighttp v0.102.1
 	go.opentelemetry.io/collector/config/confignet v0.102.1
-	go.opentelemetry.io/collector/config/configopaque v1.9.0
+	go.opentelemetry.io/collector/config/configopaque v1.11.0
 	go.opentelemetry.io/collector/config/configretry v0.102.1
 	go.opentelemetry.io/collector/config/configtelemetry v0.102.1
-	go.opentelemetry.io/collector/config/configtls v0.102.1
+	go.opentelemetry.io/collector/config/configtls v0.104.0
 	go.opentelemetry.io/collector/confmap v0.102.1
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1
 	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1
