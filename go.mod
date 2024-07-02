@@ -152,7 +152,7 @@ require (
 	github.com/prometheus/blackbox_exporter v0.24.1-0.20230623125439-bd22efa1c900
 	github.com/prometheus/client_golang v1.19.1
 	github.com/prometheus/client_model v0.6.1
-	github.com/prometheus/common v0.53.0
+	github.com/prometheus/common v0.54.0
 	github.com/prometheus/common/sigv4 v0.1.0
 	github.com/prometheus/consul_exporter v0.8.0
 	github.com/prometheus/memcached_exporter v0.13.0
@@ -182,35 +182,35 @@ require (
 	github.com/wk8/go-ordered-map v0.2.0
 	github.com/xdg-go/scram v1.1.2
 	github.com/zeebo/xxh3 v1.0.2
-	go.opentelemetry.io/collector v0.102.1
-	go.opentelemetry.io/collector/component v0.102.1
+	go.opentelemetry.io/collector v0.104.0
+	go.opentelemetry.io/collector/component v0.104.0
 	go.opentelemetry.io/collector/config/configauth v0.102.1
 	go.opentelemetry.io/collector/config/configcompression v1.9.0
 	go.opentelemetry.io/collector/config/configgrpc v0.102.1
 	go.opentelemetry.io/collector/config/confighttp v0.102.1
 	go.opentelemetry.io/collector/config/confignet v0.102.1
 	go.opentelemetry.io/collector/config/configopaque v1.9.0
-	go.opentelemetry.io/collector/config/configretry v0.102.1
-	go.opentelemetry.io/collector/config/configtelemetry v0.102.1
+	go.opentelemetry.io/collector/config/configretry v1.11.0
+	go.opentelemetry.io/collector/config/configtelemetry v0.104.0
 	go.opentelemetry.io/collector/config/configtls v0.102.1
-	go.opentelemetry.io/collector/confmap v0.102.1
+	go.opentelemetry.io/collector/confmap v0.104.0
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1
 	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1
 	go.opentelemetry.io/collector/connector v0.102.1
-	go.opentelemetry.io/collector/consumer v0.102.1
-	go.opentelemetry.io/collector/exporter v0.102.1
-	go.opentelemetry.io/collector/exporter/loggingexporter v0.102.1
+	go.opentelemetry.io/collector/consumer v0.104.0
+	go.opentelemetry.io/collector/exporter v0.104.0
+	go.opentelemetry.io/collector/exporter/loggingexporter v0.104.0
 	go.opentelemetry.io/collector/exporter/otlpexporter v0.102.1
 	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.102.1
-	go.opentelemetry.io/collector/extension v0.102.1
+	go.opentelemetry.io/collector/extension v0.104.0
 	go.opentelemetry.io/collector/extension/auth v0.102.1
-	go.opentelemetry.io/collector/featuregate v1.9.0
+	go.opentelemetry.io/collector/featuregate v1.11.0
 	go.opentelemetry.io/collector/otelcol v0.102.1
-	go.opentelemetry.io/collector/pdata v1.9.0
+	go.opentelemetry.io/collector/pdata v1.11.0
 	go.opentelemetry.io/collector/processor v0.102.1
 	go.opentelemetry.io/collector/processor/batchprocessor v0.102.1
 	go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.102.1
-	go.opentelemetry.io/collector/receiver v0.102.1
+	go.opentelemetry.io/collector/receiver v0.104.0
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.102.1
 	go.opentelemetry.io/collector/semconv v0.102.1
 	go.opentelemetry.io/collector/service v0.102.1
@@ -239,7 +239,7 @@ require (
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 	google.golang.org/api v0.180.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
