@@ -215,14 +215,14 @@ require (
 	go.opentelemetry.io/collector/semconv v0.102.1
 	go.opentelemetry.io/collector/service v0.102.1
 	go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.45.0
-	go.opentelemetry.io/otel v1.27.0
+	go.opentelemetry.io/otel v1.28.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.27.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.49.0
-	go.opentelemetry.io/otel/metric v1.27.0
+	go.opentelemetry.io/otel/metric v1.28.0
 	go.opentelemetry.io/otel/sdk v1.27.0
 	go.opentelemetry.io/otel/sdk/metric v1.27.0
-	go.opentelemetry.io/otel/trace v1.27.0
+	go.opentelemetry.io/otel/trace v1.28.0
 	go.opentelemetry.io/proto/otlp v1.2.0
 	go.uber.org/atomic v1.11.0
 	go.uber.org/goleak v1.3.0
@@ -406,7 +406,7 @@ require (
 	github.com/go-git/go-billy/v5 v5.5.0 // indirect
 	github.com/go-jose/go-jose/v3 v3.0.3 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
-	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-openapi/analysis v0.22.2 // indirect
