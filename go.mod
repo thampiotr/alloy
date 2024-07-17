@@ -197,7 +197,7 @@ require (
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1
 	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1
 	go.opentelemetry.io/collector/connector v0.102.1
-	go.opentelemetry.io/collector/consumer v0.102.1
+	go.opentelemetry.io/collector/consumer v0.105.0
 	go.opentelemetry.io/collector/exporter v0.102.1
 	go.opentelemetry.io/collector/exporter/loggingexporter v0.102.1
 	go.opentelemetry.io/collector/exporter/otlpexporter v0.102.1
@@ -206,7 +206,7 @@ require (
 	go.opentelemetry.io/collector/extension/auth v0.102.1
 	go.opentelemetry.io/collector/featuregate v1.9.0
 	go.opentelemetry.io/collector/otelcol v0.102.1
-	go.opentelemetry.io/collector/pdata v1.9.0
+	go.opentelemetry.io/collector/pdata v1.12.0
 	go.opentelemetry.io/collector/processor v0.102.1
 	go.opentelemetry.io/collector/processor/batchprocessor v0.102.1
 	go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.102.1
@@ -238,8 +238,8 @@ require (
 	golang.org/x/time v0.5.0
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d
 	google.golang.org/api v0.180.0
-	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/grpc v1.65.0
+	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 	gotest.tools v2.2.0+incompatible
@@ -353,7 +353,7 @@ require (
 	github.com/cilium/ebpf v0.12.3 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58 // indirect
-	github.com/cncf/xds/go v0.0.0-20240318125728-8a4994d93e50 // indirect
+	github.com/cncf/xds/go v0.0.0-20240423153145-555b57ec207b // indirect
 	github.com/containerd/cgroups/v3 v3.0.3 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/containerd/containerd v1.7.15 // indirect
@@ -692,8 +692,8 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.4.0 // indirect
 	gonum.org/v1/gonum v0.15.0 // indirect
 	google.golang.org/genproto v0.0.0-20240227224415-6ceb2ff114de // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240520151616-dc85e6b867a5 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20240528184218-531527333157 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240528184218-531527333157 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/fsnotify/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
