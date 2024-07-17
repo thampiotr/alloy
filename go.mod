@@ -193,7 +193,7 @@ require (
 	go.opentelemetry.io/collector/config/configretry v0.102.1
 	go.opentelemetry.io/collector/config/configtelemetry v0.102.1
 	go.opentelemetry.io/collector/config/configtls v0.102.1
-	go.opentelemetry.io/collector/confmap v0.102.1
+	go.opentelemetry.io/collector/confmap v0.105.0
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1
 	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1
 	go.opentelemetry.io/collector/connector v0.102.1
@@ -204,7 +204,7 @@ require (
 	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.102.1
 	go.opentelemetry.io/collector/extension v0.102.1
 	go.opentelemetry.io/collector/extension/auth v0.102.1
-	go.opentelemetry.io/collector/featuregate v1.9.0
+	go.opentelemetry.io/collector/featuregate v1.12.0
 	go.opentelemetry.io/collector/otelcol v0.102.1
 	go.opentelemetry.io/collector/pdata v1.9.0
 	go.opentelemetry.io/collector/processor v0.102.1
@@ -673,6 +673,7 @@ require (
 	go.opentelemetry.io/collector/confmap/provider/httpprovider v0.102.1 // indirect
 	go.opentelemetry.io/collector/confmap/provider/httpsprovider v0.102.1 // indirect
 	go.opentelemetry.io/collector/filter v0.102.1 // indirect
+	go.opentelemetry.io/collector/internal/globalgates v0.105.0 // indirect
 	go.opentelemetry.io/contrib/config v0.7.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.52.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0 // indirect
