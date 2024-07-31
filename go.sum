@@ -811,8 +811,8 @@ github.com/go-test/deep v1.0.2-0.20181118220953-042da051cf31/go.mod h1:wGDj63lr6
 github.com/go-test/deep v1.0.2/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/go-test/deep v1.1.0 h1:WOcxcdHcvdgThNXjw0t76K42FXTU7HpNQWHpA2HHNlg=
 github.com/go-test/deep v1.1.0/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
-github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 h1:TQcrn6Wq+sKGkpyPvppOz99zsMBaUOKXq6HSv655U1c=
-github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
+github.com/go-viper/mapstructure/v2 v2.0.0 h1:dhn8MZ1gZ0mzeodTG3jt5Vj/o87xZKuNAprG2mQfMfc=
+github.com/go-viper/mapstructure/v2 v2.0.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
 github.com/go-zookeeper/zk v1.0.3 h1:7M2kwOsc//9VeeFiPtf+uSJlVpU66x9Ba5+8XK7/TDg=
 github.com/go-zookeeper/zk v1.0.3/go.mod h1:nOB03cncLtlp4t+UAkGSV+9beXP/akpekBwL+UX1Qcw=
 github.com/goburrow/modbus v0.1.0/go.mod h1:Kx552D5rLIS8E7TyUwQ/UdHEqvX5T8tyiGBTlzMcZBg=
@@ -2311,8 +2311,8 @@ go.opentelemetry.io/collector/config/configtls v0.102.1 h1:7fr+PU9BRg0HRc1Pn3WmD
 go.opentelemetry.io/collector/config/configtls v0.102.1/go.mod h1:KHdrvo3cwosgDxclyiLWmtbovIwqvaIGeTXr3p5721A=
 go.opentelemetry.io/collector/config/internal v0.102.1 h1:HFsFD3xpHUuNHb8/UTz5crJw1cMHzsJQf/86sgD44hw=
 go.opentelemetry.io/collector/config/internal v0.102.1/go.mod h1:Vig3dfeJJnuRe1kBNpszBzPoj5eYnR51wXbeq36Zfpg=
-go.opentelemetry.io/collector/confmap v0.102.1 h1:wZuH+d/P11Suz8wbp+xQCJ0BPE9m5pybtUe74c+rU7E=
-go.opentelemetry.io/collector/confmap v0.102.1/go.mod h1:KgpS7UxH5rkd69CzAzlY2I1heH8Z7eNCZlHmwQBMxNg=
+go.opentelemetry.io/collector/confmap v0.106.1 h1:R7HQIPDRPOEwauBeJUlkT8Elc5f0KQr/s/kQfZi05t0=
+go.opentelemetry.io/collector/confmap v0.106.1/go.mod h1:iWdWgvxRYSHdAt5ySgPJq/i6fQMKGNnP5Pt7jOfTXno=
 go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1 h1:s0RxnaABoRxtfvUeimZ0OOsF83wD/EK1tR2N5GZyst0=
 go.opentelemetry.io/collector/confmap/converter/expandconverter v0.102.1/go.mod h1:ZwSMlOSIzmrrSSVNoMPDr21SQx7E52bZFMQJSOZ+EhY=
 go.opentelemetry.io/collector/confmap/provider/envprovider v0.102.1 h1:4KLw0pTChIqDfw0ckZ411aQDw98pu2dDOqgBHXfJm8M=
@@ -2323,8 +2323,8 @@ go.opentelemetry.io/collector/confmap/provider/httpprovider v0.102.1 h1:VsaGXqEU
 go.opentelemetry.io/collector/confmap/provider/httpprovider v0.102.1/go.mod h1:lQocxKI32Zj1F3PR9UZfzykq50/mOI1mbyZ0729dphI=
 go.opentelemetry.io/collector/confmap/provider/httpsprovider v0.102.1 h1:rEhPTqkGAezaFxJ8y/BL5m4vKTK3ZSpn+VcVLKnZo7Q=
 go.opentelemetry.io/collector/confmap/provider/httpsprovider v0.102.1/go.mod h1:GxUZM23m3u4vURw/At2zEKW+5GwcuCNsHJNT/Wq/cFI=
-go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1 h1:qmdaBIz0UnUKVitZzq+4HtO9zvRTwgNc/Q3b7kyf1NQ=
-go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.102.1/go.mod h1:nAckG/FkzAaPuwtEN2Na2+ij+2hdTjtXUtFBnlUqpFk=
+go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.106.1 h1:QMZSrCkSz4bXFA20L2f21K6GaaN82cAfJYVQ3B16AqI=
+go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.106.1/go.mod h1:UEY1GybNnd3pUd+7shEZH93naz+YAfgjz+iCV16nwpk=
 go.opentelemetry.io/collector/connector v0.102.1 h1:7lEwXmhzqtyZwz2bBUHzwV/CZqA8bhPPVJOi0cm9+Fk=
 go.opentelemetry.io/collector/connector v0.102.1/go.mod h1:DRlDYJXsFx1FKKxkdM2Ja52/xe+0bgmy0hA+wgKRUVI=
 go.opentelemetry.io/collector/consumer v0.102.1 h1:0CkgHhxwx4lI/m+hWjh607xyjooW5CObZ8hFQy5vvo0=
@@ -2345,6 +2345,8 @@ go.opentelemetry.io/collector/extension/zpagesextension v0.99.0 h1:4lG8GKJLuc/3W
 go.opentelemetry.io/collector/extension/zpagesextension v0.99.0/go.mod h1:mQF+VTrjF0VQDbJM/MeWA6QhTunEU5R4unKi0+Vn+pE=
 go.opentelemetry.io/collector/filter v0.102.1 h1:qHVt97V3iCfAwzAzddbgWH9Xm5k2sGaU3hPRHB7uSwE=
 go.opentelemetry.io/collector/filter v0.102.1/go.mod h1:6vrr9XoD+fJekeTz5G01mCy6XqMBsARgbJruXcUnhQU=
+go.opentelemetry.io/collector/internal/globalgates v0.106.1 h1:0NQHTcykmYNDsNKObJ2XocGCv3WUAQZppfP3o6hZUIA=
+go.opentelemetry.io/collector/internal/globalgates v0.106.1/go.mod h1:Z5US6O2xkZAtxVSSBnHAPFZwPhFoxlyKLUvS67Vx4gc=
 go.opentelemetry.io/collector/pdata v1.9.0 h1:qyXe3HEVYYxerIYu0rzgo1Tx2d1Zs6iF+TCckbHLFOw=
 go.opentelemetry.io/collector/pdata v1.9.0/go.mod h1:vk7LrfpyVpGZrRWcpjyy0DDZzL3SZiYMQxfap25551w=
 go.opentelemetry.io/collector/pdata/testdata v0.102.1 h1:S3idZaJxy8M7mCC4PG4EegmtiSaOuh6wXWatKIui8xU=
