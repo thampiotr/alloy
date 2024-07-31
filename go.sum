@@ -2359,8 +2359,8 @@ go.opentelemetry.io/collector/receiver v0.102.1 h1:353t4U3o0RdU007JcQ4sRRzl72GHC
 go.opentelemetry.io/collector/receiver v0.102.1/go.mod h1:pYjMzUkvUlxJ8xt+VbI1to8HMtVlv8AW/K/2GQQOTB0=
 go.opentelemetry.io/collector/receiver/otlpreceiver v0.102.1 h1:65/8lkVmOu6gwBw99W+QUQBeDC2qVTwlaiqy7/SpauY=
 go.opentelemetry.io/collector/receiver/otlpreceiver v0.102.1/go.mod h1:0hmxfFSSqKJjRGvgYjp/XvptbAgLhLguwNgJqMp7zd0=
-go.opentelemetry.io/collector/semconv v0.102.1 h1:zLhz2Gu//j7HHESFTGTrfKIaoS4r+lZFQDnGCOThggo=
-go.opentelemetry.io/collector/semconv v0.102.1/go.mod h1:yMVUCNoQPZVq/IPfrHrnntZTWsLf5YGZ7qwKulIl5hw=
+go.opentelemetry.io/collector/semconv v0.106.1 h1:x0OSXrQCFinqZNUPTKrHU0gnbwngOVOPyhedQCDyDoQ=
+go.opentelemetry.io/collector/semconv v0.106.1/go.mod h1:yMVUCNoQPZVq/IPfrHrnntZTWsLf5YGZ7qwKulIl5hw=
 go.opentelemetry.io/contrib/config v0.7.0 h1:b1rK5tGTuhhPirJiMxOcyQfZs76j2VapY6ODn3b2Dbs=
 go.opentelemetry.io/contrib/config v0.7.0/go.mod h1:8tdiFd8N5etOi3XzBmAoMxplEzI3TcL8dU5rM5/xcOQ=
 go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux v0.45.0 h1:CaagQrotQLgtDlHU6u9pE/Mf4mAwiLD8wrReIVt06lY=
