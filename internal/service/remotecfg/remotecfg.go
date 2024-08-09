@@ -18,6 +18,10 @@ import (
 	"github.com/go-kit/log"
 	collectorv1 "github.com/grafana/alloy-remote-config/api/gen/proto/go/collector/v1"
 	"github.com/grafana/alloy-remote-config/api/gen/proto/go/collector/v1/collectorv1connect"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	commonconfig "github.com/prometheus/common/config"
+
 	"github.com/grafana/alloy/internal/alloyseed"
 	"github.com/grafana/alloy/internal/build"
 	"github.com/grafana/alloy/internal/component/common/config"
@@ -27,9 +31,6 @@ import (
 	"github.com/grafana/alloy/internal/service"
 	"github.com/grafana/alloy/internal/util/jitter"
 	"github.com/grafana/alloy/syntax"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
-	commonconfig "github.com/prometheus/common/config"
 )
 
 func getHash(in []byte) string {
@@ -212,8 +213,11 @@ func (s *Service) registerMetrics() {
 // Data must only be called after Run.
 func (s *Service) Data() any {
 	s.ctrlMut.RLock()
+	defer s.ctrlMut.RUnlock()
+	if s.ctrl == nil { // TODO: maybe the whole function should return a pointer instead?
+		return Data{Host: nil}
+	}
 	host := s.ctrl.(alloy_runtime.ServiceController).GetHost()
-	s.ctrlMut.RUnlock()
 	return Data{Host: host}
 }
 
