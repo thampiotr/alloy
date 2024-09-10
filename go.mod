@@ -196,7 +196,7 @@ require (
 	go.opentelemetry.io/collector/confmap/converter/expandconverter v0.105.0
 	go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.105.0
 	go.opentelemetry.io/collector/connector v0.105.0
-	go.opentelemetry.io/collector/consumer v0.105.0
+	go.opentelemetry.io/collector/consumer v0.109.0
 	go.opentelemetry.io/collector/exporter v0.105.0
 	go.opentelemetry.io/collector/exporter/debugexporter v0.105.0
 	go.opentelemetry.io/collector/exporter/loggingexporter v0.102.1
@@ -206,7 +206,7 @@ require (
 	go.opentelemetry.io/collector/extension/auth v0.105.0
 	go.opentelemetry.io/collector/featuregate v1.12.0
 	go.opentelemetry.io/collector/otelcol v0.105.0
-	go.opentelemetry.io/collector/pdata v1.12.0
+	go.opentelemetry.io/collector/pdata v1.15.0
 	go.opentelemetry.io/collector/processor v0.105.0
 	go.opentelemetry.io/collector/processor/batchprocessor v0.105.0
 	go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.105.0
@@ -238,7 +238,7 @@ require (
 	golang.org/x/time v0.5.0
 	golang.org/x/tools v0.22.0
 	google.golang.org/api v0.183.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.2
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -390,7 +390,7 @@ require (
 	github.com/ema/qdisc v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
-	github.com/envoyproxy/go-control-plane v0.12.0 // indirect
+	github.com/envoyproxy/go-control-plane v0.12.1-0.20240621013728-1eb8caab5155 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.4 // indirect
 	github.com/euank/go-kmsg-parser v2.0.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.8.0 // indirect
@@ -615,7 +615,7 @@ require (
 	github.com/safchain/ethtool v0.3.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/samber/lo v1.38.1 // indirect
+	github.com/samber/lo v1.38.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/seccomp/libseccomp-golang v0.9.2-0.20220502022130-f33da4d89646 // indirect
@@ -713,6 +713,14 @@ require (
 	k8s.io/kube-openapi v0.0.0-20240620174524-b456828f718b // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+)
+
+require go.opentelemetry.io/collector/consumer/consumertest v0.109.0
+
+require (
+	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
+	go.opentelemetry.io/collector/consumer/consumerprofiles v0.109.0 // indirect
+	go.opentelemetry.io/collector/pdata/pprofile v0.109.0 // indirect
 )
 
 // NOTE: replace directives below must always be *temporary*.
