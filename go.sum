@@ -1067,8 +1067,6 @@ github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc h1:GN2Lv3MGO7AS6PrR
 github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc/go.mod h1:+JKpmjMGhpgPL+rXZ5nsZieVzvarn86asRlBg4uNGnk=
 github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3 h1:UPkAxuhlAcRmJT3/qd34OMTl+ZU7BLLfOO2+NXBlJpY=
 github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3/go.mod h1:iZiiwNT4HbtGRVqCQu7uJPEZCuEE5sfSSttcnePkDl4=
-github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240701202215-1d847d62ed15 h1:J4PmreN24XmbqMIKReAS/P1t7ND6NCAZApcbjBhedrY=
-github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240701202215-1d847d62ed15/go.mod h1:DANNLd5vSKqHloqNX4yeS+9ZRI89dj8ySZeEWlI5UU4=
 github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240813124544-9995e8354548 h1:XwoNrPHEl07N7EIMt/WXlzGj0Q4CDEfa+6nrdnQGOG4=
 github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240813124544-9995e8354548/go.mod h1:DANNLd5vSKqHloqNX4yeS+9ZRI89dj8ySZeEWlI5UU4=
 github.com/grafana/tail v0.0.0-20230510142333-77b18831edf0 h1:bjh0PVYSVVFxzINqPFYJmAmJNrWPgnVjuSdYJGHmtFU=
@@ -2298,8 +2296,8 @@ go.opentelemetry.io/collector/component v0.105.0 h1:/OdkWHd1xTNX7JRq9iW3AFoJAnYU
 go.opentelemetry.io/collector/component v0.105.0/go.mod h1:s8KoxOrhNIBzetkb0LHmzX1OI67DyZbaaUPOWIXS1mg=
 go.opentelemetry.io/collector/config/configauth v0.105.0 h1:9Pa65Ay4kdmMsp5mg+/791GvCYy1hHOroIlKBiJzlps=
 go.opentelemetry.io/collector/config/configauth v0.105.0/go.mod h1:iL62YzyFCNr1Se0EDYaQ792CFCBiFivSbTWekd4g1VE=
-go.opentelemetry.io/collector/config/configcompression v1.12.0 h1:RxqSDVZPJyL7I3v+gdVDvnJ/9tV0ZWgraRDX/gaddfA=
-go.opentelemetry.io/collector/config/configcompression v1.12.0/go.mod h1:6+m0GKCv7JKzaumn7u80A2dLNCuYf5wdR87HWreoBO0=
+go.opentelemetry.io/collector/config/configcompression v1.17.0 h1:5CzLHTPOgHaKod1ZQLYs0o7GZDBhdsLQRm8Lcbo79vU=
+go.opentelemetry.io/collector/config/configcompression v1.17.0/go.mod h1:pnxkFCLUZLKWzYJvfSwZnPrnm0twX14CYj2ADth5xiU=
 go.opentelemetry.io/collector/config/configgrpc v0.105.0 h1:3IbN6+5c42Bp6CGPKoXZ7QkkQpRxnV01KRse6oD+bd0=
 go.opentelemetry.io/collector/config/configgrpc v0.105.0/go.mod h1:wrFPXVXk4so7yYisuPeebZtU6ECzG5aXOYNdfyoHSnI=
 go.opentelemetry.io/collector/config/confighttp v0.105.0 h1:0sVdNFuLikgDhxdp+mrbSrYzovwRxZDVIhv9ZQ0X5e4=
