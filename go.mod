@@ -84,7 +84,7 @@ require (
 	github.com/hashicorp/vault/api/auth/kubernetes v0.2.0
 	github.com/hashicorp/vault/api/auth/ldap v0.2.0
 	github.com/hashicorp/vault/api/auth/userpass v0.6.0
-	github.com/heroku/x v0.0.61
+	github.com/heroku/x v0.3.1
 	github.com/iamseth/oracledb_exporter v0.0.0-20230918193147-95e16f21ceee
 	github.com/influxdata/go-syslog/v3 v3.0.1-0.20230911200830-875f5bc594a4
 	github.com/jaegertracing/jaeger v1.59.0
@@ -615,7 +615,7 @@ require (
 	github.com/safchain/ethtool v0.3.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/samber/lo v1.38.1 // indirect
+	github.com/samber/lo v1.38.1
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
 	github.com/seccomp/libseccomp-golang v0.9.2-0.20220502022130-f33da4d89646 // indirect
