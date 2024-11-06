@@ -1067,8 +1067,6 @@ github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc h1:GN2Lv3MGO7AS6PrR
 github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc/go.mod h1:+JKpmjMGhpgPL+rXZ5nsZieVzvarn86asRlBg4uNGnk=
 github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3 h1:UPkAxuhlAcRmJT3/qd34OMTl+ZU7BLLfOO2+NXBlJpY=
 github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3/go.mod h1:iZiiwNT4HbtGRVqCQu7uJPEZCuEE5sfSSttcnePkDl4=
-github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240701202215-1d847d62ed15 h1:J4PmreN24XmbqMIKReAS/P1t7ND6NCAZApcbjBhedrY=
-github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240701202215-1d847d62ed15/go.mod h1:DANNLd5vSKqHloqNX4yeS+9ZRI89dj8ySZeEWlI5UU4=
 github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240813124544-9995e8354548 h1:XwoNrPHEl07N7EIMt/WXlzGj0Q4CDEfa+6nrdnQGOG4=
 github.com/grafana/snowflake-prometheus-exporter v0.0.0-20240813124544-9995e8354548/go.mod h1:DANNLd5vSKqHloqNX4yeS+9ZRI89dj8ySZeEWlI5UU4=
 github.com/grafana/tail v0.0.0-20230510142333-77b18831edf0 h1:bjh0PVYSVVFxzINqPFYJmAmJNrWPgnVjuSdYJGHmtFU=
@@ -2370,8 +2368,8 @@ go.opentelemetry.io/collector/receiver v0.105.0 h1:eZF97kMUnKJ20Uc4PaDlgLIGmaA8k
 go.opentelemetry.io/collector/receiver v0.105.0/go.mod h1:nGKDXLUGVHxMBJ5QLfsJ/bIhGvoMGqsN0pZtD5SC8sE=
 go.opentelemetry.io/collector/receiver/otlpreceiver v0.105.0 h1:1qjnvrnDcEaj93WgyrWRWTTAGNODaxi98wNcXiHDwfM=
 go.opentelemetry.io/collector/receiver/otlpreceiver v0.105.0/go.mod h1:XGs9OAQQFDfVhSzruLcFNdzhTw2kbZZAV68iRE9ecGA=
-go.opentelemetry.io/collector/semconv v0.105.0 h1:8p6dZ3JfxFTjbY38d8xlQGB1TQ3nPUvs+D0RERniZ1g=
-go.opentelemetry.io/collector/semconv v0.105.0/go.mod h1:yMVUCNoQPZVq/IPfrHrnntZTWsLf5YGZ7qwKulIl5hw=
+go.opentelemetry.io/collector/semconv v0.113.0 h1:twenSI7M7MJMJKW8D6a/GXxPZTPbama/weywBtV2iFw=
+go.opentelemetry.io/collector/semconv v0.113.0/go.mod h1:zCJ5njhWpejR+A40kiEoeFm1xq1uzyZwMnRNX6/D82A=
 go.opentelemetry.io/contrib/config v0.8.0 h1:OD7aDMhL+2EpzdSHfkDmcdD/uUA+PgKM5faFyF9XFT0=
 go.opentelemetry.io/contrib/config v0.8.0/go.mod h1:dGeVZWE//3wrxYHHP0iCBYJU1QmOmPcbV+FNB7pjDYI=
 go.opentelemetry.io/contrib/detectors/aws/ec2 v1.28.0 h1:d+y/wygENfwEbVpo7c3A9GfnMhoTiepQcthQSh+Mc9g=
