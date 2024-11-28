@@ -178,7 +178,7 @@ require (
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/webdevops/azure-metrics-exporter v0.0.0-20230717202958-8701afc2b013
 	github.com/webdevops/go-common v0.0.0-20231022162947-a6adfb05a7e9
-	github.com/wk8/go-ordered-map v0.2.0
+	github.com/wk8/go-ordered-map v1.0.0
 	github.com/xdg-go/scram v1.1.2
 	github.com/zeebo/xxh3 v1.0.2
 	go.opentelemetry.io/collector v0.105.0
