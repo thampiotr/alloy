@@ -1,4 +1,4 @@
-package main
+package flowcli
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
@@ -21,16 +21,15 @@ import (
 	_ "github.com/grafana/alloy/internal/winmanifest"
 )
 
-func init() {
-	// If the build version wasn't set by the build process, we'll set it based
-	// on the version string in VERSION.
-	if build.Version == "" || build.Version == "v0.0.0" {
-		build.Version = fallbackVersion()
-	}
-
-	prometheus.MustRegister(build.NewCollector("alloy"))
+func SetBuildVersion(version string) {
+	build.Version = version
 }
 
-func main() {
+func BuildVersion() string {
+	return build.Version
+}
+
+func Main() {
+	prometheus.MustRegister(build.NewCollector("alloy"))
 	alloycli.Run()
 }

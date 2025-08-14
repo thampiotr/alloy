@@ -2,9 +2,7 @@
 
 module github.com/grafana/alloy/otelcol
 
-go 1.23.0
-
-toolchain go1.24.5
+go 1.24.4
 
 require (
 	github.com/grafana/alloy/otelcol/extension/alloyflow v0.1.0

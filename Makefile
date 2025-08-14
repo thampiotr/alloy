@@ -184,7 +184,7 @@ alloy:
 ifeq ($(USE_CONTAINER),1)
 	$(RERUN_IN_CONTAINER)
 else
-	$(GO_ENV) go build $(GO_FLAGS) -o $(ALLOY_BINARY) .
+	cd ./alloymain && $(GO_ENV) go build $(GO_FLAGS) -o ../$(ALLOY_BINARY) .
 endif
 
 # alloy-service is not included in binaries since it's Windows-only.
