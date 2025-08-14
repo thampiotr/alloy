@@ -8,14 +8,14 @@ import (
 )
 
 var (
-	// typeStr is the type string for the alloy-flow extension.
+	// typeStr is the type string for the alloyflow extension.
 	typeStr = component.MustNewType("alloyflow")
 
 	// stability level of the component.
 	stability = component.StabilityLevelDevelopment
 )
 
-// NewFactory creates a factory for the alloy-flow extension.
+// NewFactory creates a factory for the alloyflow extension.
 func NewFactory() extension.Factory {
 	return extension.NewFactory(
 		typeStr,
@@ -28,13 +28,11 @@ func NewFactory() extension.Factory {
 // createDefaultConfig creates the default configuration for the extension.
 func createDefaultConfig() component.Config {
 	return &Config{
-		Endpoint:    "localhost:8080",
-		Timeout:     "30s",
 		EnableDebug: false,
 	}
 }
 
-// createExtension creates an alloy-flow extension instance.
+// createExtension creates an alloyflow extension instance.
 func createExtension(
 	_ context.Context,
 	settings extension.Settings,

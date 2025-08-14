@@ -1,16 +1,7 @@
 package alloyflow
 
-// Config represents the configuration for the alloy-flow extension.
+// Config represents the configuration for the alloyflow extension.
 type Config struct {
-
-	// Endpoint specifies the alloy-flow endpoint to connect to.
-	// Default: "localhost:8080"
-	Endpoint string `mapstructure:"endpoint"`
-
-	// Timeout specifies the timeout for alloy-flow operations.
-	// Default: 30s
-	Timeout string `mapstructure:"timeout"`
-
 	// EnableDebug enables debug logging for the extension.
 	// Default: false
 	EnableDebug bool `mapstructure:"enable_debug"`
