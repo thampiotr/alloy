@@ -1,8 +1,9 @@
 dist:
   module: github.com/grafana/alloy/otelcol
-  name: otelcol
-  description: Subprocess proof of concept collector binary.
-  version: 0.1
+  name: alloy
+  description: Alloy OTel Collector distribution.
+  # TODO: this can be generated too
+  version: v1.11.0
   output_path: .
 
 extensions:
@@ -21,8 +22,27 @@ receivers:
 connectors:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/connector/countconnector v0.128.0
 
-# When using `make genotelcontribcol`, the `replaces` content is appended to this
-# file before passing it to OCB, to ensure that local versions are used for all
-# Contrib modules.
 replaces:
+  - github.com/grafana/alloy => ../
   - github.com/grafana/alloy/otelcol/extension/alloyflow => ../extension/alloyflow
+  # Replace directives from main go.mod of Alloy
+  # TODO: is there a better way to populate this? go:generate should be able to do this before we use OCB.
+  - go.opentelemetry.io/collector/featuregate => github.com/grafana/opentelemetry-collector/featuregate v0.0.0-20240325174506-2fd1623b2ca0
+  - github.com/fsnotify/fsnotify => github.com/fsnotify/fsnotify v1.7.0
+  - github.com/prometheus/prometheus => github.com/grafana/prometheus v1.8.2-0.20250811161144-6e21f656d8e5
+  - gopkg.in/yaml.v2 => github.com/rfratto/go-yaml v0.0.0-20211119180816-77389c3526dc
+  - github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
+  - github.com/Azure/azure-storage-blob-go => github.com/MasslessParticle/azure-storage-blob-go v0.14.1-0.20240322194317-344980fda573
+  - github.com/gocql/gocql => github.com/grafana/gocql v0.0.0-20200605141915-ba5dc39ece85
+  - github.com/grafana/regexp => github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc
+  - github.com/hashicorp/memberlist => github.com/grafana/memberlist v0.3.1-0.20220714140823-09ffed8adbbe
+  - github.com/influxdata/go-syslog/v3 => github.com/leodido/go-syslog/v4 v4.2.0
+  - github.com/thanos-io/objstore => github.com/grafana/objstore v0.0.0-20250210100727-533688b5600d
+  - github.com/google/cadvisor => github.com/grafana/cadvisor v0.0.0-20240729082359-1f04a91701e2
+  - github.com/prometheus-community/postgres_exporter => github.com/grafana/postgres_exporter v0.0.0-20250714124518-c5d0a4dad445
+  - github.com/prometheus/mysqld_exporter => github.com/grafana/mysqld_exporter v0.17.2-0.20250226152553-be612e3fdedd
+  - github.com/prometheus/node_exporter => github.com/grafana/node_exporter v0.18.1-grafana-r01.0.20250806062222-612bdf9540ec
+  - github.com/github/smimesign => github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3
+  - github.com/grafana/alloy/syntax => ../syntax
+  - go.opentelemetry.io/ebpf-profiler => github.com/grafana/opentelemetry-ebpf-profiler v0.0.0-20250624035245-5fc775dac6dc
+  - k8s.io/client-go => k8s.io/client-go v0.32.6
