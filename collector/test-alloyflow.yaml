@@ -1,0 +1,23 @@
+extensions:
+  alloyflow:
+    enable_debug: true
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch:
+
+exporters:
+  debug:
+
+service:
+  extensions: [alloyflow]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
