@@ -72,7 +72,7 @@ func runCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "run [flags] path",
-		Short: "Run Grafana Alloy",
+		Short: "Run Grafana Alloy in flow mode",
 		Long: `The run subcommand runs Grafana Alloy in the foreground until an interrupt
 is received.
 

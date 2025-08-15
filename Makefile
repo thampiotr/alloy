@@ -188,7 +188,7 @@ alloy:
 ifeq ($(USE_CONTAINER),1)
 	$(RERUN_IN_CONTAINER)
 else
-	$(GO_ENV) go build $(GO_FLAGS) -o $(ALLOY_BINARY) .
+	cd ./collector && $(GO_ENV) go build $(GO_FLAGS) -o ../$(ALLOY_BINARY) .
 endif
 
 # alloy-service is not included in binaries since it's Windows-only.
@@ -232,8 +232,8 @@ alloy-image-windows:
 # Targets for generating assets
 #
 
-.PHONY: generate generate-helm-docs generate-helm-tests generate-ui generate-versioned-files generate-winmanifest generate-snmp
-generate: generate-helm-docs generate-helm-tests generate-ui generate-versioned-files generate-docs generate-winmanifest generate-snmp
+.PHONY: generate generate-helm-docs generate-helm-tests generate-ui generate-versioned-files generate-winmanifest generate-snmp generate-otel-collector-distro
+generate: generate-helm-docs generate-helm-tests generate-ui generate-versioned-files generate-docs generate-winmanifest generate-snmp generate-otel-collector-distro
 
 generate-helm-docs:
 ifeq ($(USE_CONTAINER),1)
@@ -268,6 +268,13 @@ ifeq ($(USE_CONTAINER),1)
 	$(RERUN_IN_CONTAINER)
 else
 	go generate ./internal/tools/docs_generator/
+endif
+
+generate-otel-collector-distro:
+ifeq ($(USE_CONTAINER),1)
+	$(RERUN_IN_CONTAINER)
+else
+	cd ./collector && go generate .
 endif
 
 generate-winmanifest:
