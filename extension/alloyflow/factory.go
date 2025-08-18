@@ -27,9 +27,7 @@ func NewFactory() extension.Factory {
 
 // createDefaultConfig creates the default configuration for the extension.
 func createDefaultConfig() component.Config {
-	return &Config{
-		EnableDebug: false,
-	}
+	return &Config{}
 }
 
 // createExtension creates an alloyflow extension instance.

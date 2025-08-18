@@ -1,6 +1,6 @@
 extensions:
   alloyflow:
-    enable_debug: true
+    config_path: example-config.alloy
 
 receivers:
   otlp:
