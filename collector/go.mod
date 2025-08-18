@@ -970,6 +970,8 @@ require (
 
 replace github.com/grafana/alloy => ../
 
+replace github.com/grafana/alloy/syntax => ../syntax
+
 replace github.com/grafana/alloy/otelcol/extension/alloyflow => ../extension/alloyflow
 
 replace go.opentelemetry.io/collector/featuregate => github.com/grafana/opentelemetry-collector/featuregate v0.0.0-20240325174506-2fd1623b2ca0
@@ -1003,8 +1005,6 @@ replace github.com/prometheus/mysqld_exporter => github.com/grafana/mysqld_expor
 replace github.com/prometheus/node_exporter => github.com/grafana/node_exporter v0.18.1-grafana-r01.0.20250806062222-612bdf9540ec
 
 replace github.com/github/smimesign => github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3
-
-replace github.com/grafana/alloy/syntax => ../syntax
 
 replace go.opentelemetry.io/ebpf-profiler => github.com/grafana/opentelemetry-ebpf-profiler v0.0.0-20250624035245-5fc775dac6dc
 

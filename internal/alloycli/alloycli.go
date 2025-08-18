@@ -32,7 +32,7 @@ func Command() *cobra.Command {
 	cmd.AddCommand(
 		convertCommand(),
 		fmtCommand(),
-		runCommand(),
+		RunCommand(),
 		toolsCommand(),
 		validateCommand(),
 	)

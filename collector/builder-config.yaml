@@ -24,6 +24,7 @@ connectors:
 
 replaces:
   - github.com/grafana/alloy => ../
+  - github.com/grafana/alloy/syntax => ../syntax
   - github.com/grafana/alloy/otelcol/extension/alloyflow => ../extension/alloyflow
   # Replace directives from main go.mod of Alloy
   # TODO: is there a better way to populate this? go:generate should be able to do this before we use OCB.
@@ -43,6 +44,5 @@ replaces:
   - github.com/prometheus/mysqld_exporter => github.com/grafana/mysqld_exporter v0.17.2-0.20250226152553-be612e3fdedd
   - github.com/prometheus/node_exporter => github.com/grafana/node_exporter v0.18.1-grafana-r01.0.20250806062222-612bdf9540ec
   - github.com/github/smimesign => github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3
-  - github.com/grafana/alloy/syntax => ../syntax
   - go.opentelemetry.io/ebpf-profiler => github.com/grafana/opentelemetry-ebpf-profiler v0.0.0-20250624035245-5fc775dac6dc
   - k8s.io/client-go => k8s.io/client-go v0.32.6

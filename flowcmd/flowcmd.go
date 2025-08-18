@@ -33,7 +33,11 @@ func init() {
 }
 
 
-// Command exposes the root Cobra command constructed by the internal alloy CLI.
-func Command() *cobra.Command {
+// RootCommand exposes the root Cobra command constructed by the internal alloy CLI.
+func RootCommand() *cobra.Command {
 	return alloycli.Command()
+}
+
+func RunCommand() *cobra.Command {
+	return alloycli.RunCommand()
 }
