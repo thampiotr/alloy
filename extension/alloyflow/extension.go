@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/grafana/alloy/flowcmd"
+	"github.com/spf13/cobra"
 )
 
 var _ extension.Extension = (*alloyFlowExtension)(nil)
@@ -39,9 +40,10 @@ func (s state) String() string {
 
 // alloyFlowExtension implements the alloyflow extension.
 type alloyFlowExtension struct {
-	config    *Config
-	settings  component.TelemetrySettings
-	runExited chan struct{}
+	config            *Config
+	settings          component.TelemetrySettings
+	runExited         chan struct{}
+	runCommandFactory func() *cobra.Command
 
 	stateMutex sync.Mutex
 	state      state
@@ -51,9 +53,10 @@ type alloyFlowExtension struct {
 // newAlloyFlowExtension creates a new alloyflow extension instance.
 func newAlloyFlowExtension(config *Config, settings component.TelemetrySettings) *alloyFlowExtension {
 	return &alloyFlowExtension{
-		config:   config,
-		settings: settings,
-		state:    stateNotStarted,
+		config:            config,
+		settings:          settings,
+		state:             stateNotStarted,
+		runCommandFactory: flowcmd.RunCommand,
 	}
 }
 
@@ -69,7 +72,7 @@ func (e *alloyFlowExtension) Start(ctx context.Context, host component.Host) err
 		return fmt.Errorf("cannot start alloyflow extension in current state: %s", e.state.String())
 	}
 
-	runCommand := flowcmd.RunCommand()
+	runCommand := e.runCommandFactory()
 	runCommand.SetArgs([]string{e.config.ConfigPath})
 	err := runCommand.ParseFlags(e.config.flagsAsSlice())
 	if err != nil {
@@ -113,7 +116,7 @@ func (e *alloyFlowExtension) Shutdown(ctx context.Context) error {
 		// guaranteed to be non-nil since we are in stateRunning
 		e.runCancel()
 		// unlock so that the run goroutine can transition to terminated
-		e.stateMutex.Unlock() 
+		e.stateMutex.Unlock()
 
 		select {
 		case <-e.runExited:
