@@ -53,7 +53,7 @@ import (
 	_ "github.com/grafana/alloy/internal/component/all"
 )
 
-func runCommand() *cobra.Command {
+func RunCommand() *cobra.Command {
 	r := &alloyRun{
 		inMemoryAddr:          "alloy.internal:12345",
 		httpListenAddr:        "127.0.0.1:12345",
@@ -72,7 +72,7 @@ func runCommand() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "run [flags] path",
-		Short: "Run Grafana Alloy",
+		Short: "Run Grafana Alloy in flow mode",
 		Long: `The run subcommand runs Grafana Alloy in the foreground until an interrupt
 is received.
 
@@ -207,7 +207,7 @@ func (fr *alloyRun) Run(cmd *cobra.Command, configPath string) error {
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
-	ctx, cancel := interruptContext()
+	ctx, cancel := interruptContext(cmd.Context())
 	defer cancel()
 
 	if configPath == "" {
@@ -584,8 +584,8 @@ func addDeprecatedFlags(cmd *cobra.Command) {
 	deprecateFlagByName(cmd, "feature.prometheus.metric-validation-scheme")
 }
 
-func interruptContext() (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(context.Background())
+func interruptContext(parent context.Context) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
 
 	go func() {
 		defer cancel()

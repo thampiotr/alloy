@@ -82,7 +82,8 @@ loki.write "loki" {
 
 otelcol.exporter.otlp "tempo" {
 	client {
-		endpoint = coalesce(sys.env("TEMPO_HOST"), "localhost:4317")
+		// Send to local OTLP receiver (from config-otel.yaml). Override with OTELCOL_OTLP_ENDPOINT if needed.
+		endpoint = coalesce(sys.env("OTELCOL_OTLP_ENDPOINT"), "localhost:4317")
 
 		tls {
 			insecure = true
