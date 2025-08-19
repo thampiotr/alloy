@@ -6,9 +6,10 @@ go 1.24.6
 
 require (
 	github.com/grafana/alloy v0.0.0-00010101000000-000000000000
-	github.com/grafana/alloy/otelcol/extension/alloyflow v0.1.0
+	github.com/grafana/alloy/extension/alloyflow v0.1.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/connector/countconnector v0.128.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/extension/jaegerremotesampling v0.128.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.128.0
 	github.com/spf13/cobra v1.9.1
 	go.opentelemetry.io/collector/component v1.34.0
 	go.opentelemetry.io/collector/confmap v1.35.0
@@ -20,7 +21,9 @@ require (
 	go.opentelemetry.io/collector/connector v0.128.0
 	go.opentelemetry.io/collector/exporter v0.128.0
 	go.opentelemetry.io/collector/exporter/debugexporter v0.128.0
+	go.opentelemetry.io/collector/exporter/otlpexporter v0.128.0
 	go.opentelemetry.io/collector/extension v1.34.0
+	go.opentelemetry.io/collector/extension/zpagesextension v0.128.0
 	go.opentelemetry.io/collector/otelcol v0.128.0
 	go.opentelemetry.io/collector/processor v1.34.0
 	go.opentelemetry.io/collector/processor/batchprocessor v0.128.0
@@ -844,7 +847,6 @@ require (
 	go.opentelemetry.io/collector/consumer/xconsumer v0.128.0 // indirect
 	go.opentelemetry.io/collector/exporter/exporterhelper/xexporterhelper v0.128.0 // indirect
 	go.opentelemetry.io/collector/exporter/exportertest v0.128.0 // indirect
-	go.opentelemetry.io/collector/exporter/otlpexporter v0.128.0 // indirect
 	go.opentelemetry.io/collector/exporter/otlphttpexporter v0.128.0 // indirect
 	go.opentelemetry.io/collector/exporter/xexporter v0.128.0 // indirect
 	go.opentelemetry.io/collector/extension/extensionauth v1.34.0 // indirect
@@ -891,6 +893,7 @@ require (
 	go.opentelemetry.io/contrib/propagators/b3 v1.36.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.35.0 // indirect
 	go.opentelemetry.io/contrib/samplers/jaegerremote v0.30.0 // indirect
+	go.opentelemetry.io/contrib/zpages v0.61.0 // indirect
 	go.opentelemetry.io/ebpf-profiler v0.0.0-00010101000000-000000000000 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
@@ -972,7 +975,7 @@ replace github.com/grafana/alloy => ../
 
 replace github.com/grafana/alloy/syntax => ../syntax
 
-replace github.com/grafana/alloy/otelcol/extension/alloyflow => ../extension/alloyflow
+replace github.com/grafana/alloy/extension/alloyflow => ../extension/alloyflow
 
 replace go.opentelemetry.io/collector/featuregate => github.com/grafana/opentelemetry-collector/featuregate v0.0.0-20240325174506-2fd1623b2ca0
 
