@@ -8,10 +8,13 @@ dist:
 
 extensions:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/jaegerremotesampling v0.128.0
-  - gomod: github.com/grafana/alloy/otelcol/extension/alloyflow v0.1.0
+  - gomod: github.com/grafana/alloy/extension/alloyflow v0.1.0
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.128.0
+  - gomod: go.opentelemetry.io/collector/extension/zpagesextension v0.128.0
 
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.128.0
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.128.0
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.128.0
@@ -25,7 +28,7 @@ connectors:
 replaces:
   - github.com/grafana/alloy => ../
   - github.com/grafana/alloy/syntax => ../syntax
-  - github.com/grafana/alloy/otelcol/extension/alloyflow => ../extension/alloyflow
+  - github.com/grafana/alloy/extension/alloyflow => ../extension/alloyflow
   # Replace directives from main go.mod of Alloy
   # TODO: is there a better way to populate this? go:generate should be able to do this before we use OCB.
   - go.opentelemetry.io/collector/featuregate => github.com/grafana/opentelemetry-collector/featuregate v0.0.0-20240325174506-2fd1623b2ca0

@@ -1864,6 +1864,8 @@ github.com/open-telemetry/opentelemetry-collector-contrib/extension/jaegerremote
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/jaegerremotesampling v0.128.0/go.mod h1:v/l0K5rz4ZW43XwMYR/tXvQPmXOpbZknEVmNUQIvN9E=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/oauth2clientauthextension v0.128.0 h1:+BCQB9h9elvQyANiOU2popqio/zvZDvSGK0r+t2IE68=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/oauth2clientauthextension v0.128.0/go.mod h1:YgXT3i9IqkcP75tbKvuL6I8nYtiQTgXzv0R+Vs18ZEU=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.128.0 h1:5HqfuL+WJrjWHvZBoD8Cse5nsU8X570tjrUgLjSeglg=
+github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v0.128.0/go.mod h1:LVaxBTpTQxZmNo024hCh1h+AwTFEHPaJ/W24dtaAhn4=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.128.0 h1:6iSqLTnzdLyMmJvBpLWlUnz9Tu5pUgX1cT01+zPJZSQ=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/sigv4authextension v0.128.0/go.mod h1:IVNNHGzOzHKzKjeifK0kZAI9pygvmEMyYMQLBURQjCY=
 github.com/open-telemetry/opentelemetry-collector-contrib/extension/storage v0.128.0 h1:T5IE0l1qcIg6dkHui4hHe+qj3VzuMwpnhrUyubyCwO0=
