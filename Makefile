@@ -123,9 +123,9 @@ VPREFIXSYNTAX := github.com/grafana/alloy/syntax/internal/stdlib
 GO_LDFLAGS   := -X $(VPREFIX).Branch=$(GIT_BRANCH)                        \
                 -X $(VPREFIX).Version=$(VERSION)                          \
 		-X $(VPREFIXSYNTAX).Version=$(VERSION)                    \
-                -X $(VPREFIX).Revision=$(GIT_REVISION)                    \
+                -X $(VPREFIX).Revision="development"                    \
                 -X $(VPREFIX).BuildUser=$(shell whoami)@$(shell hostname) \
-                -X $(VPREFIX).BuildDate=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+                -X $(VPREFIX).BuildDate="development"
 
 DEFAULT_FLAGS    := $(GO_FLAGS)
 DEBUG_GO_FLAGS   := -ldflags "$(GO_LDFLAGS)" -tags "$(GO_TAGS)"
@@ -274,7 +274,9 @@ generate-otel-collector-distro:
 ifeq ($(USE_CONTAINER),1)
 	$(RERUN_IN_CONTAINER)
 else
-	cd ./collector && go generate .
+	cd ./collector && builder --config ./builder-config.yaml --skip-compilation
+	cd ./collector && go mod tidy
+	cd ./collector && go run ./generator/generator.go -- ./main.go ./main_alloy.go
 endif
 
 generate-winmanifest:
