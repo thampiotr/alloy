@@ -993,92 +993,11 @@ require (
 	github.com/peterbourgon/ff/v3 v3.4.0 // indirect
 )
 
-// NOTE: replace directives below must always be *temporary*.
-//
-// Adding a replace directive to change a module to a fork of a module will
-// only be accepted when a PR upstream has been opened to accept the new
-// change.
-//
-// Contributors are expected to work with upstream to make their changes
-// acceptable, and remove the `replace` directive as soon as possible.
-//
-// If upstream is unresponsive, you should consider making a hard fork
-// (i.e., creating a new Go module with the same source) or picking a different
-// dependency.
-
-// TODO: remove this replace directive once the upstream issue is fixed: https://github.com/prometheus/prometheus/issues/13842
-replace go.opentelemetry.io/collector/featuregate => github.com/grafana/opentelemetry-collector/featuregate v0.0.0-20240325174506-2fd1623b2ca0 // feature-gate-registration-error-handler branch
-
-// Replace directives from Prometheus
-replace github.com/fsnotify/fsnotify v1.8.0 => github.com/fsnotify/fsnotify v1.7.0
-
-// TODO: remove replace directive once:
-// * There is a release of Prometheus which addresses https://github.com/prometheus/prometheus/issues/14049,
-// for example, via this implementation: https://github.com/grafana/prometheus/pull/34
-replace github.com/prometheus/prometheus => github.com/grafana/prometheus v1.8.2-0.20250811161144-6e21f656d8e5 // staleness_disabling_v3.4.2 branch
-
-replace gopkg.in/yaml.v2 => github.com/rfratto/go-yaml v0.0.0-20211119180816-77389c3526dc
-
-// Replace directives from Loki
-replace (
-	github.com/Azure/azure-sdk-for-go => github.com/Azure/azure-sdk-for-go v68.0.0+incompatible
-	github.com/Azure/azure-storage-blob-go => github.com/MasslessParticle/azure-storage-blob-go v0.14.1-0.20240322194317-344980fda573
-	// Use fork of gocql that has gokit logs and Prometheus metrics.
-	github.com/gocql/gocql => github.com/grafana/gocql v0.0.0-20200605141915-ba5dc39ece85
-	// Insist on the optimised version of grafana/regexp
-	github.com/grafana/regexp => github.com/grafana/regexp v0.0.0-20240518133315-a468a5bfb3bc
-	// Replace memberlist with our fork which includes some fixes that haven't been
-	// merged upstream yet.
-	github.com/hashicorp/memberlist => github.com/grafana/memberlist v0.3.1-0.20220714140823-09ffed8adbbe
-	// leodido fork his project to continue support
-	github.com/influxdata/go-syslog/v3 => github.com/leodido/go-syslog/v4 v4.2.0
-	// Loki needs a NormalizeLabel function which has been removed from the latest version of the translator
-	github.com/prometheus/otlptranslator => github.com/prometheus/otlptranslator v0.0.0-20250414121140-35db323fe9fb
-	github.com/thanos-io/objstore => github.com/grafana/objstore v0.0.0-20250210100727-533688b5600d
-)
-
-// TODO(rfratto): remove forks when changes are merged upstream
-replace (
-	// TODO(tpaschalis) this is to remove global instantiation of plugins
-	// and allow non-singleton components.
-	// https://github.com/grafana/cadvisor/tree/grafana-v0.47-noglobals
-	github.com/google/cadvisor => github.com/grafana/cadvisor v0.0.0-20240729082359-1f04a91701e2
-
-	// TODO(dehaansa): integrate the changes from the exporter-package-v0.17.0 branch into at least the
-	// grafana fork of the exporter, or completely into upstream
-	github.com/prometheus-community/postgres_exporter => github.com/grafana/postgres_exporter v0.0.0-20250714124518-c5d0a4dad445
-
-	// TODO(marctc): remove once this PR is merged upstream: https://github.com/prometheus/mysqld_exporter/pull/774
-	github.com/prometheus/mysqld_exporter => github.com/grafana/mysqld_exporter v0.17.2-0.20250226152553-be612e3fdedd
-
-	// TODO(marctc, mattdurham): Replace node_export with custom fork for multi usage. https://github.com/prometheus/node_exporter/pull/2812
-	// this commit is on the refactor_collectors branch in the grafana fork.
-	github.com/prometheus/node_exporter => github.com/grafana/node_exporter v0.18.1-grafana-r01.0.20250806062222-612bdf9540ec //refactor_collectors
-)
-
-replace github.com/github/smimesign => github.com/grafana/smimesign v0.2.1-0.20220408144937-2a5adf3481d3
-
 // Submodules.
 replace github.com/grafana/alloy/syntax => ./syntax
 
-// Add exclude directives so Go doesn't pick old incompatible k8s.io/client-go
-// versions.
+// Add exclude directives so Go doesn't pick old incompatible k8s.io/client-go versions.
 exclude (
 	k8s.io/client-go v8.0.0+incompatible
 	k8s.io/client-go v12.0.0+incompatible
 )
-
-replace go.opentelemetry.io/obi => github.com/grafana/opentelemetry-ebpf-instrumentation v1.2.4
-
-replace go.opentelemetry.io/ebpf-profiler => github.com/grafana/opentelemetry-ebpf-profiler v0.0.202537-0.20250903104920-08eeb4019222
-
-// TODO - remove this once otel updates to go 1.24 & k8s client 0.33.x
-replace k8s.io/client-go => k8s.io/client-go v0.32.6
-
-// Do not remove this until the bug breaking backwards compatibility is resolved & included in walqueue: https://github.com/deneonet/benc/issues/13
-replace github.com/deneonet/benc => github.com/deneonet/benc v1.1.7
-
-// Pin runc to v1.1.12 to maintain compatibility with cadvisor that requires libcontainer/cgroups packages
-replace github.com/opencontainers/runc => github.com/opencontainers/runc v1.2.6
-
-replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.20.4
