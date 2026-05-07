@@ -46,27 +46,27 @@ type config struct {
 func main() {
 	cfg, err := parseFlags()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	if err := requireCommands("docker", "kind", "kubectl", "helm", "go", "make"); err != nil {
-		fmt.Fprintln(os.Stderr, err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
 	if err := os.Chdir(cfg.repoRoot); err != nil {
-		fmt.Fprintf(os.Stderr, "change dir: %v\n", err)
+		fmt.Printf("change dir: %v\n", err)
 		os.Exit(1)
 	}
 	if cfg.interactive {
 		if err := runInteractive(&cfg); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
 	if err := os.MkdirAll(filepath.Dir(cfg.kubeconfig), 0o700); err != nil {
-		fmt.Fprintf(os.Stderr, "create kubeconfig dir: %v\n", err)
+		fmt.Printf("create kubeconfig dir: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -94,7 +94,7 @@ func main() {
 	}
 	for _, s := range steps {
 		if err := util.Step(s.name, s.fn); err != nil {
-			fmt.Fprintln(os.Stderr, err)
+			fmt.Println(err)
 			os.Exit(1)
 		}
 	}
