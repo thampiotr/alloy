@@ -58,7 +58,11 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	if err := os.MkdirAll(filepath.Dir(cfg.kubeconfig), 0o755); err != nil {
+	// 0o700 / 0o600 below: kubectl warns ("WARNING: Kubeconfig ... has
+	// insecure permissions") when the kubeconfig file or its parent
+	// directory is readable by group/other. The file embeds cluster
+	// credentials, so keep both user-only.
+	if err := os.MkdirAll(filepath.Dir(cfg.kubeconfig), 0o700); err != nil {
 		fmt.Fprintf(os.Stderr, "create kubeconfig dir: %v\n", err)
 		os.Exit(1)
 	}
@@ -273,7 +277,9 @@ func clusterExists() (bool, error) {
 }
 
 func configureKubeEnv(cfg config) error {
-	file, err := os.Create(cfg.kubeconfig)
+	// 0o600: kubeconfig holds cluster credentials; kubectl emits an
+	// "insecure permissions" warning if it's readable by group/other.
+	file, err := os.OpenFile(cfg.kubeconfig, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("create kubeconfig: %w", err)
 	}
