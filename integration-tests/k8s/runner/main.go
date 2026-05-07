@@ -113,18 +113,20 @@ func parseFlags() (config, error) {
 		kubeconfig: kubeconfigPath,
 	}
 
+	flag.CommandLine.SetOutput(os.Stdout)
+
 	var pkgFlag string
 	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run")
 	flag.BoolVar(&cfg.deleteCluster, "delete-cluster", false, "Delete the kind cluster (if any) before the run; useful to force a clean slate, can be combined with --reuse-cluster")
 	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
-	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or `./.../...` pattern (default: "+defaultTestPackages+")")
+	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
 	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to `go test` (e.g. --run TestMimirAlerts to rerun a single test)")
 	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
 	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
 	flag.Usage = func() {
-		_, _ = fmt.Fprintln(flag.CommandLine.Output(), "Usage: go run ./integration-tests/k8s/runner [flags]")
-		_, _ = fmt.Fprintln(flag.CommandLine.Output())
+		fmt.Println("Usage: go run ./integration-tests/k8s/runner [flags]")
+		fmt.Println()
 		flag.PrintDefaults()
 	}
 	flag.Parse()
