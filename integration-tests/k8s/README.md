@@ -15,9 +15,6 @@ Useful options (forwarded with `RUN_ARGS`):
 ```sh
 make integration-test-k8s RUN_ARGS='--reuse-cluster'
 make integration-test-k8s RUN_ARGS='--skip-alloy-build'
-# Force a clean slate before the run. Pair with --reuse-cluster to also keep
-# the freshly-created cluster for the next iteration.
-make integration-test-k8s RUN_ARGS='--delete-cluster --reuse-cluster'
 # Split test packages across 2 shards and run shard index 0.
 make integration-test-k8s RUN_ARGS='--shard 0/2'
 make integration-test-k8s RUN_ARGS='--package ./integration-tests/k8s/tests/prometheus-operator'

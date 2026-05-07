@@ -31,16 +31,12 @@ type config struct {
 	repoRoot       string
 	kubeconfig     string
 	alloyImage     string
-	deleteCluster  bool
 	reuseCluster   bool
 	skipAlloyBuild bool
 	shard          string
-	// packages holds one or more `go test` patterns (paths or `./.../...`
-	// wildcards). runGoTests expands each via `go list` and runs `go test`
-	// once per resolved package so -v output streams in real time.
-	packages    []string
-	runRegex    string
-	interactive bool
+	packages       []string
+	runRegex       string
+	interactive    bool
 }
 
 func main() {
@@ -85,7 +81,6 @@ func main() {
 		fn   func() error
 	}{
 		{"build alloy image", func() error { return maybeBuildAlloyImage(cfg) }},
-		{"delete kind cluster (preflight)", func() error { return maybeDeleteCluster(cfg) }},
 		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
 		{"configure kubeconfig env", func() error { return configureKubeEnv(cfg) }},
 		{"clean reused cluster namespaces", func() error { return cleanReusedClusterNamespaces(cfg) }},
@@ -113,11 +108,9 @@ func parseFlags() (config, error) {
 		kubeconfig: kubeconfigPath,
 	}
 
-	flag.CommandLine.SetOutput(os.Stdout)
-
 	var pkgFlag string
-	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run")
-	flag.BoolVar(&cfg.deleteCluster, "delete-cluster", false, "Delete the kind cluster (if any) before the run; useful to force a clean slate, can be combined with --reuse-cluster")
+	flag.CommandLine.SetOutput(os.Stdout)
+	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run; without this flag the runner deletes any existing cluster up-front")
 	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
@@ -151,24 +144,6 @@ func maybeBuildAlloyImage(cfg config) error {
 	}
 	logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
 	return runCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
-}
-
-// maybeDeleteCluster deletes the managed kind cluster up-front when
-// --delete-cluster is set. Combine with --reuse-cluster to get "fresh start
-// now, keep across subsequent local iterations". Tolerates a missing cluster.
-func maybeDeleteCluster(cfg config) error {
-	if !cfg.deleteCluster {
-		return nil
-	}
-	exists, err := clusterExists()
-	if err != nil {
-		return err
-	}
-	if !exists {
-		logf("no kind cluster %q to delete", clusterName)
-		return nil
-	}
-	return runCommand("kind", "delete", "cluster", "--name", clusterName)
 }
 
 func ensureCluster(cfg config) error {

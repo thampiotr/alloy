@@ -12,7 +12,9 @@ import (
 var promGenManifest string
 
 const (
-	promGenImage      = "prom-gen:latest"
+	promGenImage = "prom-gen:latest"
+	// TODO: currently we use the one from docker integration tests. Consider
+	// moving it to the k8s integration tests in the future.
 	promGenDockerfile = "integration-tests/docker/configs/prom-gen/Dockerfile"
 	promGenSelector   = "app=prom-gen"
 )

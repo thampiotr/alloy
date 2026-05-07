@@ -42,7 +42,6 @@ func runInteractive(cfg *config) error {
 				Options(
 					huh.NewOption("Reuse kind cluster", "reuse-cluster").Selected(true),
 					huh.NewOption("Skip Alloy image build", "skip-alloy-build").Selected(true),
-					huh.NewOption("Delete kind cluster before run", "delete-cluster"),
 				).
 				Value(&runOpts),
 		),
@@ -82,7 +81,6 @@ func runInteractive(cfg *config) error {
 
 	cfg.reuseCluster = slices.Contains(runOpts, "reuse-cluster")
 	cfg.skipAlloyBuild = slices.Contains(runOpts, "skip-alloy-build")
-	cfg.deleteCluster = slices.Contains(runOpts, "delete-cluster")
 	switch filterMode {
 	case "all":
 		cfg.shard = ""
