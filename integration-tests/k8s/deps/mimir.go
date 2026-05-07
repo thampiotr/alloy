@@ -34,7 +34,7 @@ const (
 //go:embed manifests/mimir.yaml
 var mimirManifest string
 
-type MetricsResponse struct {
+type metricsResponse struct {
 	Status string `json:"status"`
 	Data   []struct {
 		Name string `json:"__name__"`
@@ -132,13 +132,13 @@ func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []st
 		queryURL.RawQuery = values.Encode()
 		resp := curl(c, queryURL.String())
 
-		var metricsResponse MetricsResponse
-		err = json.Unmarshal([]byte(resp), &metricsResponse)
+		var parsed metricsResponse
+		err = json.Unmarshal([]byte(resp), &parsed)
 		require.NoError(c, err, "failed to parse mimir response: %s", resp)
-		require.Equal(c, "success", metricsResponse.Status, "mimir query failed: %s", resp)
+		require.Equal(c, "success", parsed.Status, "mimir query failed: %s", resp)
 
-		actualMetrics := make(map[string]struct{}, len(metricsResponse.Data))
-		for _, metric := range metricsResponse.Data {
+		actualMetrics := make(map[string]struct{}, len(parsed.Data))
+		for _, metric := range parsed.Data {
 			actualMetrics[metric.Name] = struct{}{}
 		}
 

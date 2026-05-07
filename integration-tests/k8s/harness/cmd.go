@@ -44,10 +44,10 @@ func RunCommandStdin(stdin, name string, args ...string) error {
 	return cmd.Run()
 }
 
-// RunDiagnosticCommand runs name with args under ctx and prints the combined
+// runDiagnosticCommand runs name with args under ctx and prints the combined
 // output. It is intended for failure-diagnostics hooks and never inherits
 // stdin. Errors are returned with context-aware timeout reporting.
-func RunDiagnosticCommand(ctx context.Context, name string, args ...string) error {
+func runDiagnosticCommand(ctx context.Context, name string, args ...string) error {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = CommandEnv()
 	var out bytes.Buffer
@@ -76,7 +76,7 @@ func RunDiagnosticCommands(ctx context.Context, commands [][]string) error {
 		if len(args) == 0 {
 			continue
 		}
-		if err := RunDiagnosticCommand(ctx, args[0], args[1:]...); err != nil {
+		if err := runDiagnosticCommand(ctx, args[0], args[1:]...); err != nil {
 			errs = append(errs, err.Error())
 		}
 	}
