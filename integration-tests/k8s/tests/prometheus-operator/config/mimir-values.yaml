@@ -1,0 +1,16 @@
+# Compact Mimir profile for integration tests: keep only the components
+# required for the write/read paths exercised by the prom-operator tests.
+ingester:
+  replicas: 1
+querier:
+  replicas: 1
+query_scheduler:
+  enabled: false
+store_gateway:
+  enabled: false
+compactor:
+  enabled: false
+admin_api:
+  enabled: false
+gateway:
+  enabled: false

@@ -12,7 +12,10 @@ func TestPrometheusOperator(t *testing.T) {
 		Name:   "test-prometheus-operator",
 		Labels: map[string]string{"alloy-integration-test": "true"},
 	})
-	mimir := deps.NewMimir(deps.MimirOptions{Namespace: ns.Name()})
+	mimir := deps.NewMimir(deps.MimirOptions{
+		Namespace:  ns.Name(),
+		ValuesPath: "./config/mimir-values.yaml",
+	})
 	alloy := deps.NewAlloy(deps.AlloyOptions{
 		Namespace:  ns.Name(),
 		Release:    "alloy-prometheus-operator",

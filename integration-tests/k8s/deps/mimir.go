@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -54,6 +55,7 @@ type ExpectedMetadata struct {
 const mimirHelmRelease = "mimir"
 
 type Mimir struct {
+	opts            MimirOptions
 	namespace       string
 	localPort       string
 	stopPortForward func()
@@ -61,11 +63,16 @@ type Mimir struct {
 }
 
 type MimirOptions struct {
+	// Namespace to install Mimir into. Required.
 	Namespace string
+	// ValuesPath is an optional path to a helm values file applied to the
+	// mimir-distributed chart. Use it to set chart options like component
+	// counts, enabled flags, resource sizing, etc.
+	ValuesPath string
 }
 
 func NewMimir(opts MimirOptions) *Mimir {
-	return &Mimir{namespace: opts.Namespace}
+	return &Mimir{opts: opts, namespace: opts.Namespace}
 }
 
 func (m *Mimir) Name() string {
@@ -77,7 +84,7 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 		return fmt.Errorf("mimir namespace is required")
 	}
 
-	if err := installMimir(m.namespace); err != nil {
+	if err := installMimir(m.namespace, m.opts.ValuesPath); err != nil {
 		return err
 	}
 	m.installed = true
@@ -204,7 +211,7 @@ func (m *Mimir) diagnosticsHook() func(context.Context) error {
 	}
 }
 
-func installMimir(namespace string) error {
+func installMimir(namespace, valuesPath string) error {
 	if err := util.Step("helm repo add grafana", func() error {
 		return harness.RunCommand("helm", "repo", "add", "grafana", "https://grafana.github.io/helm-charts")
 	}); err != nil {
@@ -216,25 +223,22 @@ func installMimir(namespace string) error {
 		return err
 	}
 	return util.Step("install mimir", func() error {
-		return harness.RunCommand(
-			"helm",
-			"upgrade",
-			"--install",
-			"mimir",
+		args := []string{
+			"helm", "upgrade", "--install",
+			mimirHelmRelease,
 			"grafana/mimir-distributed",
 			"--version", "5.8.0",
 			"--namespace", namespace,
 			"--wait",
-			// TODO: we should probably use values.yaml instead of --set and keep
-			// mimir-values.yaml in the test config/ directory like we do with alloy.
-			"--set", "ingester.replicas=1",
-			"--set", "querier.replicas=1",
-			"--set", "query_scheduler.enabled=false",
-			"--set", "store_gateway.enabled=false",
-			"--set", "compactor.enabled=false",
-			"--set", "admin_api.enabled=false",
-			"--set", "gateway.enabled=false",
-		)
+		}
+		if valuesPath != "" {
+			absValuesPath, err := filepath.Abs(valuesPath)
+			if err != nil {
+				return fmt.Errorf("resolve mimir values path: %w", err)
+			}
+			args = append(args, "--values", absValuesPath)
+		}
+		return harness.RunCommand(args[0], args[1:]...)
 	})
 }
 

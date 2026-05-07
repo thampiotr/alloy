@@ -13,7 +13,10 @@ func TestMimirAlerts(t *testing.T) {
 		Name:   "test-mimir-alerts-kubernetes",
 		Labels: map[string]string{"alloy-integration-test": "true"},
 	})
-	mimir := deps.NewMimir(deps.MimirOptions{Namespace: ns.Name()})
+	mimir := deps.NewMimir(deps.MimirOptions{
+		Namespace:  ns.Name(),
+		ValuesPath: "./config/mimir-values.yaml",
+	})
 	alloy := deps.NewAlloy(deps.AlloyOptions{
 		Namespace:  ns.Name(),
 		Release:    "alloy-mimir-alerts-kubernetes",
