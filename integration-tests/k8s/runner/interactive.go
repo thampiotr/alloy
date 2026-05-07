@@ -40,7 +40,7 @@ func configureInteractive(cfg *config) error {
 			huh.NewMultiSelect[string]().
 				Title("Run options").
 				Options(
-					huh.NewOption("Reuse kind cluster", "reuse-cluster").Selected(true),
+					huh.NewOption("Reuse kind cluster if one exists", "reuse-cluster").Selected(true),
 					huh.NewOption("Skip Alloy image build", "skip-alloy-build").Selected(true),
 				).
 				Value(&runOpts),
