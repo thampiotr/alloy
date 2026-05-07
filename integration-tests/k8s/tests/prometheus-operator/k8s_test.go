@@ -27,11 +27,6 @@ func TestPrometheusOperator(t *testing.T) {
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		// Order: namespace; promOp installs the CRDs (ServiceMonitor,
-		// PodMonitor, Probe, ScrapeConfig) that monitoringCRDs uses; the
-		// metrics-emitting fixtures (prom-gen, blackbox); the monitoring
-		// CRDs themselves; then mimir; finally alloy. Cleanup runs in
-		// reverse so helm releases uninstall first and the namespace last.
 		Dependencies: []harness.Dependency{ns, promOp, promGen, blackbox, monitoringCRDs, mimir, alloy},
 	})
 	defer kt.Cleanup(t)

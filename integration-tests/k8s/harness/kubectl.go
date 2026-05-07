@@ -11,11 +11,9 @@ const (
 	// pulls, alertmanager bootstrap).
 	readyTimeout = 5 * time.Minute
 	// readyAttemptTimeout caps each kubectl wait call so we re-check the
-	// pod selector if the previous attempt failed (typically because no
-	// pods existed yet between apply and the controller creating them).
+	// pod selector if the previous attempt timed out.
 	readyAttemptTimeout = "15s"
-	// readyPollInterval is the gap between retries. Short enough that a
-	// freshly-applied Deployment is picked up promptly.
+	// readyPollInterval is the gap between retries.
 	readyPollInterval = 1 * time.Second
 )
 
@@ -29,12 +27,7 @@ func Kubectl(args ...string) error {
 }
 
 // WaitForReady blocks until at least one pod matching selector in namespace
-// reports condition=Ready, or readyTimeout elapses. It loops on
-// `kubectl wait --for=condition=ready pod -l <selector>` because that command
-// fails immediately with "no matching resources found" when no pods exist
-// yet (a race against the Deployment/DaemonSet/StatefulSet controller right
-// after apply). Each attempt blocks for at most readyAttemptTimeout, then we
-// retry until the readyTimeout budget is spent.
+// reports condition=Ready, or readyTimeout elapses.
 //
 // Call this from a Dependency's Install before returning, so callers can
 // rely on "Install has returned" meaning "the dep is usable".

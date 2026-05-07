@@ -26,9 +26,6 @@ func TestMimirAlerts(t *testing.T) {
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		// promOp installs the AlertmanagerConfig CRD that extraManifests
-		// applies; mimir waits for its own pod readiness so alloy can
-		// reach it as soon as Install returns.
 		Dependencies: []harness.Dependency{ns, promOp, extraManifests, mimir, alloy},
 	})
 	defer kt.Cleanup(t)
