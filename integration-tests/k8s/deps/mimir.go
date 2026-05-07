@@ -232,8 +232,14 @@ func pickFreeLocalPort() (string, error) {
 	return port, nil
 }
 
+// curlTimeout caps a single HTTP attempt against Mimir. Without it a stalled
+// port-forward would block inside the EventuallyWithT callback well past the
+// outer retry deadline, masking the failure as a generic timeout.
+const curlTimeout = 5 * time.Second
+
 func curl(c *assert.CollectT, targetURL string) string {
-	resp, err := http.Get(targetURL)
+	client := http.Client{Timeout: curlTimeout}
+	resp, err := client.Get(targetURL)
 	require.NoError(c, err)
 	defer resp.Body.Close()
 

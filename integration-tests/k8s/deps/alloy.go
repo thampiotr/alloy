@@ -62,7 +62,7 @@ func (a *Alloy) Install(ctx *harness.TestContext) error {
 	}
 
 	image := os.Getenv(alloyImageEnv)
-	imageRepo, imageTag, ok := strings.Cut(image, ":")
+	imageRepo, imageTag, ok := splitImageRef(image)
 	if !ok {
 		return fmt.Errorf("%s must be in repo:tag format (the test runner sets this), got %q", alloyImageEnv, image)
 	}
@@ -151,6 +151,27 @@ func createAlloyConfigMap(namespace, configPath string) error {
 		return fmt.Errorf("create alloy configmap: %w", err)
 	}
 	return nil
+}
+
+// splitImageRef splits a "repo:tag" reference on the LAST ":", so registry
+// ports such as "localhost:5000/alloy:dev" parse correctly. Returns ok=false
+// for empty input or refs without a tag. Digest refs ("repo@sha256:...")
+// are not supported here — the runner only ever passes a repo:tag value.
+func splitImageRef(ref string) (repo, tag string, ok bool) {
+	idx := strings.LastIndex(ref, ":")
+	if idx < 0 {
+		return "", "", false
+	}
+	// A ":" that appears before the last "/" belongs to a registry port,
+	// not the tag separator. e.g. "localhost:5000/alloy" has no tag.
+	if slash := strings.LastIndex(ref, "/"); slash > idx {
+		return "", "", false
+	}
+	repo, tag = ref[:idx], ref[idx+1:]
+	if repo == "" || tag == "" {
+		return "", "", false
+	}
+	return repo, tag, true
 }
 
 func repoRootFromCwd() (string, error) {

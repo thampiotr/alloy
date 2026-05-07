@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -57,8 +58,18 @@ func kubeconfigFromEnv() (string, error) {
 // managed test kubeconfig (when set). Pass it as cmd.Env when running a long
 // lived command directly with exec.Cmd; for one-shot invocations prefer the
 // RunCommand* helpers which apply this automatically.
+//
+// Any pre-existing KUBECONFIG entry inherited from os.Environ() is stripped
+// before appending — POSIX permits duplicate keys but tools differ on which
+// one wins, so we pin a single deterministic value.
 func CommandEnv() []string {
-	env := os.Environ()
+	parent := os.Environ()
+	env := make([]string, 0, len(parent)+1)
+	for _, kv := range parent {
+		if !strings.HasPrefix(kv, "KUBECONFIG=") {
+			env = append(env, kv)
+		}
+	}
 	if kubeconfig := os.Getenv(kubeconfigEnv); kubeconfig != "" {
 		env = append(env, "KUBECONFIG="+kubeconfig)
 	}

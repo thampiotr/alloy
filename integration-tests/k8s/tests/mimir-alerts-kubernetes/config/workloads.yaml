@@ -79,6 +79,12 @@ spec:
   - name: "null"
   - name: "database-pager"
 ---
+# Negative-case fixture: this AlertmanagerConfig lives in a SEPARATE namespace
+# (othernamespace) and is intentionally semantically malformed — `matchers` is
+# a list of strings instead of {name, value, matchType} objects. We expect
+# Alloy to log a parse error for this CRD and skip it, while still merging the
+# valid configs above into Mimir's alertmanager_config (see expected_*.yml).
+# Do NOT "fix" the matcher block; the test asserts the error path.
 apiVersion: v1
 kind: Namespace
 metadata:
