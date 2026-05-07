@@ -21,7 +21,7 @@ func TestMimirAlerts(t *testing.T) {
 	})
 	alloy := deps.NewAlloy(deps.AlloyOptions{
 		Namespace:  ns.Name(),
-		Release:    "alloy",
+		Release:    "alloy-test-mimir-alerts",
 		ConfigPath: "./config/config.alloy",
 		ValuesPath: "./config/alloy-values.yaml",
 	})
