@@ -289,12 +289,16 @@ func loadAlloyImage(cfg config) error {
 	return runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
 
-// runGoTests expands each configured pattern via `go list` and runs `go test
-// -v` once per resolved package. Running one package per invocation is
-// intentional: when `go test` is given multiple packages, it buffers each
-// package's `-v` output until that package finishes, which hides progress
-// and makes hangs invisible. Single-package invocations stream test logs in
-// real time.
+// runGoTests expands the configured patterns via `go list` and runs `go test
+// -v`.
+//
+// Single package: invoked alone so test logs stream in real time (useful
+// when iterating on one test or debugging a hang).
+//
+// Multiple packages: handed to one `go test` call so it parallelises across
+// them up to GOMAXPROCS for shorter wall-clock. The tradeoff is that Go
+// buffers each package's -v output until that package finishes, so chunks
+// arrive per-package rather than line-by-line.
 func runGoTests(cfg config) error {
 	patterns := cfg.packages
 	if len(patterns) == 0 {
@@ -307,22 +311,22 @@ func runGoTests(cfg config) error {
 	if len(pkgs) == 0 {
 		return fmt.Errorf("no test packages matched %v", patterns)
 	}
-	for _, pkg := range pkgs {
-		args := []string{"test", "-v", "-timeout", "30m"}
-		if cfg.runRegex != "" {
-			args = append(args, "-run", cfg.runRegex)
-		}
-		args = append(args, pkg)
-		stepName := "go test " + pkg
-		if cfg.shard != "" {
-			args = append(args, "-args", "-shard="+cfg.shard)
-			stepName += " (shard " + cfg.shard + ")"
-		}
-		if err := util.Step(stepName, func() error { return runCommand("go", args...) }); err != nil {
-			return err
-		}
+
+	args := []string{"test", "-v", "-timeout", "30m"}
+	if cfg.runRegex != "" {
+		args = append(args, "-run", cfg.runRegex)
 	}
-	return nil
+	args = append(args, pkgs...)
+
+	stepName := "go test " + pkgs[0]
+	if len(pkgs) > 1 {
+		stepName = fmt.Sprintf("go test (%d packages, parallel)", len(pkgs))
+	}
+	if cfg.shard != "" {
+		args = append(args, "-args", "-shard="+cfg.shard)
+		stepName += " (shard " + cfg.shard + ")"
+	}
+	return util.Step(stepName, func() error { return runCommand("go", args...) })
 }
 
 // expandPackages resolves Go package patterns (which may include `...`) into
