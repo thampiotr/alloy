@@ -14,7 +14,7 @@ Useful options (forwarded with `RUN_ARGS`):
 
 ```sh
 make integration-test-k8s RUN_ARGS='--reuse-cluster'
-make integration-test-k8s RUN_ARGS='--skip-alloy-image'
+make integration-test-k8s RUN_ARGS='--skip-alloy-build'
 # Force a clean slate before the run. Pair with --reuse-cluster to also keep
 # the freshly-created cluster for the next iteration.
 make integration-test-k8s RUN_ARGS='--delete-cluster --reuse-cluster'

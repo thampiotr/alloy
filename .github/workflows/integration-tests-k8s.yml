@@ -65,4 +65,4 @@ jobs:
     - name: Load Alloy image
       run: docker load -i alloy-image.tar
     - name: Run tests
-      run: make integration-test-k8s RUN_ARGS="--skip-alloy-image --shard ${{ matrix.shard }}"
+      run: make integration-test-k8s RUN_ARGS="--skip-alloy-build --shard ${{ matrix.shard }}"

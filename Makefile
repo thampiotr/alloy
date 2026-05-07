@@ -207,7 +207,7 @@ integration-test-docker:
 integration-test-k8s:
 	go run ./integration-tests/k8s/runner $(RUN_ARGS)
 
-# Interactive mode for local development: pick reuse-cluster, skip-alloy-image,
+# Interactive mode for local development: pick reuse-cluster, skip-alloy-build,
 # and shard/packages from a TUI menu before tests run.
 .PHONY: integration-test-k8s-local-dev
 integration-test-k8s-local-dev:

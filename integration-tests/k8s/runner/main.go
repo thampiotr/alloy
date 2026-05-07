@@ -23,17 +23,17 @@ const (
 )
 
 type config struct {
-	repoRoot      string
-	kubeconfig    string
-	alloyImage    string
-	deleteCluster bool
-	reuseCluster  bool
-	skipAlloy     bool
-	shard         string
-	packageScope  string
-	packages      []string
-	runRegex      string
-	interactive   bool
+	repoRoot       string
+	kubeconfig     string
+	alloyImage     string
+	deleteCluster  bool
+	reuseCluster   bool
+	skipAlloyBuild bool
+	shard          string
+	packageScope   string
+	packages       []string
+	runRegex       string
+	interactive    bool
 }
 
 func main() {
@@ -118,12 +118,12 @@ func parseFlags() (config, error) {
 	// local runs safe while letting you skip the kind cluster recreation cost.
 	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run")
 	flag.BoolVar(&cfg.deleteCluster, "delete-cluster", false, "Delete the kind cluster (if any) before the run; useful to force a clean slate, can be combined with --reuse-cluster")
-	flag.BoolVar(&cfg.skipAlloy, "skip-alloy-image", false, "Do not run make alloy-image (requires image to exist)")
+	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	flag.StringVar(&cfg.packageScope, "package", cfg.packageScope, "Run one package path")
 	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to go test")
 	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
-	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-image, shard/packages) via an interactive menu before running")
+	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
 	flag.Usage = func() {
 		_, _ = fmt.Fprintln(flag.CommandLine.Output(), "Usage: go run ./integration-tests/k8s/runner [flags]")
 		_, _ = fmt.Fprintln(flag.CommandLine.Output())
@@ -143,10 +143,10 @@ func requireCommands(commands ...string) error {
 }
 
 func maybeBuildAlloyImage(cfg config) error {
-	if !cfg.skipAlloy {
+	if !cfg.skipAlloyBuild {
 		return runCommand("make", "alloy-image")
 	}
-	logf("--skip-alloy-image set; expecting %q already in local docker daemon", cfg.alloyImage)
+	logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
 	return runCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
 }
 

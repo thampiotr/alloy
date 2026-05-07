@@ -18,7 +18,7 @@ import (
 // Both "reuse cluster" and "skip alloy image" default to selected because
 // that's the typical dev-machine flow; the user can deselect them in the form.
 func runInteractive(cfg *config) error {
-	runOpts := []string{"reuse-cluster", "skip-alloy-image"}
+	runOpts := []string{"reuse-cluster", "skip-alloy-build"}
 	filterMode := "all"
 	shard := cfg.shard
 	if shard == "" {
@@ -41,7 +41,7 @@ func runInteractive(cfg *config) error {
 				Description("Space toggles, Enter confirms.").
 				Options(
 					huh.NewOption("Reuse kind cluster", "reuse-cluster").Selected(true),
-					huh.NewOption("Skip Alloy image build", "skip-alloy-image").Selected(true),
+					huh.NewOption("Skip Alloy image build", "skip-alloy-build").Selected(true),
 					huh.NewOption("Delete kind cluster before run", "delete-cluster"),
 				).
 				Value(&runOpts),
@@ -81,7 +81,7 @@ func runInteractive(cfg *config) error {
 	}
 
 	cfg.reuseCluster = slices.Contains(runOpts, "reuse-cluster")
-	cfg.skipAlloy = slices.Contains(runOpts, "skip-alloy-image")
+	cfg.skipAlloyBuild = slices.Contains(runOpts, "skip-alloy-build")
 	cfg.deleteCluster = slices.Contains(runOpts, "delete-cluster")
 	switch filterMode {
 	case "all":
