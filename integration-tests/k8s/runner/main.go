@@ -5,12 +5,12 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/grafana/alloy/integration-tests/k8s/harness"
 	"github.com/grafana/alloy/integration-tests/k8s/util"
 )
 
@@ -72,7 +72,7 @@ func main() {
 			return
 		}
 		_ = util.Step("delete kind cluster (post-test)", func() error {
-			return runCommand("kind", "delete", "cluster", "--name", clusterName)
+			return harness.RunCommand("kind", "delete", "cluster", "--name", clusterName)
 		})
 	}()
 
@@ -140,10 +140,10 @@ func requireCommands(commands ...string) error {
 
 func maybeBuildAlloyImage(cfg config) error {
 	if !cfg.skipAlloyBuild {
-		return runCommand("make", "alloy-image")
+		return harness.RunCommand("make", "alloy-image")
 	}
 	logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
-	return runCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
+	return harness.RunCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
 }
 
 func ensureCluster(cfg config) error {
@@ -157,11 +157,11 @@ func ensureCluster(cfg config) error {
 			return nil
 		}
 		logf("cluster already exists, deleting stale cluster first")
-		if err := runCommand("kind", "delete", "cluster", "--name", clusterName); err != nil {
+		if err := harness.RunCommand("kind", "delete", "cluster", "--name", clusterName); err != nil {
 			return err
 		}
 	}
-	return runCommand("kind", "create", "cluster", "--name", clusterName)
+	return harness.RunCommand("kind", "create", "cluster", "--name", clusterName)
 }
 
 // systemNamespaces are namespaces that ship with kind/Kubernetes itself or
@@ -204,7 +204,7 @@ func cleanReusedClusterNamespaces(cfg config) error {
 	}
 	for _, ns := range leftovers {
 		logf("deleting namespace %s", ns)
-		if err := runCommand("kubectl", "--kubeconfig", cfg.kubeconfig,
+		if err := harness.RunCommand("kubectl", "--kubeconfig", cfg.kubeconfig,
 			"delete", "namespace", ns, "--wait=true", "--timeout=10m",
 		); err != nil {
 			return fmt.Errorf("delete namespace %q: %w", ns, err)
@@ -286,7 +286,7 @@ func configureKubeEnv(cfg config) error {
 // cluster. Test-specific images (prom-gen, blackbox-exporter, etc.) are the
 // responsibility of their respective dependencies in deps/.
 func loadAlloyImage(cfg config) error {
-	return runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
+	return harness.RunCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
 
 // runGoTests runs `go test -v` once for the configured patterns. With a
@@ -307,25 +307,8 @@ func runGoTests(cfg config) error {
 		args = append(args, "-args", "-shard="+cfg.shard)
 	}
 	return util.Step("go test "+strings.Join(patterns, " "), func() error {
-		return runCommand("go", args...)
+		return harness.RunCommand("go", args...)
 	})
-}
-
-func runCommand(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	cmd.Env = os.Environ()
-	return cmd.Run()
-}
-
-func runCommandQuiet(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = io.Discard
-	cmd.Env = os.Environ()
-	return cmd.Run()
 }
 
 func logf(format string, args ...any) {
