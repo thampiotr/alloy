@@ -106,20 +106,28 @@ func parseFlags() (config, error) {
 		kubeconfig: kubeconfigPath,
 	}
 
+	// Use a private FlagSet rather than flag.CommandLine: the harness package
+	// also registers a "-shard" flag at package init for the test binary, and
+	// since the runner imports harness for RunCommand etc. that registration
+	// would conflict with our own --shard if both used the global FlagSet.
+	fs := flag.NewFlagSet("runner", flag.ExitOnError)
+	fs.SetOutput(os.Stdout)
+
 	var pkgFlag string
-	flag.CommandLine.SetOutput(os.Stdout)
-	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse the existing kind cluster and keep it after the run. The runner does NOT clean leftover namespaces, so a flaky previous run can fail with AlreadyExists; rerun without this flag to recreate the cluster from scratch")
-	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
-	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
-	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
-	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
-	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
-	flag.Usage = func() {
+	fs.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse the existing kind cluster and keep it after the run. The runner does NOT clean leftover namespaces, so a flaky previous run can fail with AlreadyExists; rerun without this flag to recreate the cluster from scratch")
+	fs.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
+	fs.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
+	fs.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
+	fs.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
+	fs.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
+	fs.Usage = func() {
 		fmt.Println("Usage: go run ./integration-tests/k8s/runner [flags]")
 		fmt.Println()
-		flag.PrintDefaults()
+		fs.PrintDefaults()
 	}
-	flag.Parse()
+	if err := fs.Parse(os.Args[1:]); err != nil {
+		return config{}, err
+	}
 	if pkgFlag != "" {
 		cfg.packages = []string{pkgFlag}
 	}
