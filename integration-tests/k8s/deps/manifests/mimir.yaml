@@ -64,9 +64,6 @@ data:
         dir: /data/ruler
 
     alertmanager:
-      # Mimir validates these two paths with a string-prefix check, so they
-      # must not be subdirectories of each other. Keep them as siblings under
-      # /data with names that don't share a prefix.
       data_dir: /data/am-data
       external_url: http://localhost
       sharding_ring:

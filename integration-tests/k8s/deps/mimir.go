@@ -41,10 +41,8 @@ type metricsResponse struct {
 	} `json:"data"`
 }
 
-// Mimir runs a single-pod Mimir in monolithic mode (target=all,alertmanager)
-// with filesystem storage and inmemory rings. This is intentionally not
-// production-shaped; it's the smallest Mimir we can stand up to exercise
-// Alloy's remote_write and alertmanager-config push paths in tests.
+// Mimir runs a single-pod Mimir in monolithic mode
+// with filesystem storage and inmemory rings.
 //
 // In-cluster URL: http://mimir:9009 (Service name "mimir", port 9009).
 // Tests should point Alloy's `prometheus.remote_write` /
@@ -83,9 +81,7 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 	m.installed = true
 
 	// Wait for the readiness probe so port-forward and HTTP queries below
-	// connect to a usable Service endpoint. Mimir's /ready returns 200 only
-	// once all in-process targets (distributor, ingester, alertmanager, ...)
-	// report ready.
+	// connect to a usable Service endpoint.
 	if err := util.Step("wait for mimir pod ready", func() error {
 		return harness.WaitForReady(m.namespace, mimirSelector)
 	}); err != nil {

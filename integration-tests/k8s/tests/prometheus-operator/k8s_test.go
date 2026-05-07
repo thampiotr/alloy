@@ -22,7 +22,7 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 	alloy := deps.NewAlloy(deps.AlloyOptions{
 		Namespace:  ns.Name(),
-		Release:    "alloy-prometheus-operator",
+		Release:    "alloy",
 		ConfigPath: "./config/config.alloy",
 		ValuesPath: "./config/alloy-values.yaml",
 	})

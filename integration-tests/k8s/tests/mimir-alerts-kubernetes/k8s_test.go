@@ -15,15 +15,15 @@ func TestMimirAlerts(t *testing.T) {
 	})
 	promOp := deps.NewPrometheusOperator(deps.PrometheusOperatorOptions{})
 	mimir := deps.NewMimir(deps.MimirOptions{Namespace: ns.Name()})
-	alloy := deps.NewAlloy(deps.AlloyOptions{
-		Namespace:  ns.Name(),
-		Release:    "alloy-mimir-alerts-kubernetes",
-		ConfigPath: "./config/config.alloy",
-		ValuesPath: "./config/alloy-values.yaml",
-	})
 	extraManifests := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
 		Path: "./config/workloads.yaml",
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
+	})
+	alloy := deps.NewAlloy(deps.AlloyOptions{
+		Namespace:  ns.Name(),
+		Release:    "alloy",
+		ConfigPath: "./config/config.alloy",
+		ValuesPath: "./config/alloy-values.yaml",
 	})
 	harness.Setup(t, harness.Options{
 		Dependencies: []harness.Dependency{ns, promOp, extraManifests, mimir, alloy},
