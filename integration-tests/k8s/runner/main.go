@@ -106,10 +106,6 @@ func parseFlags() (config, error) {
 		kubeconfig: kubeconfigPath,
 	}
 
-	// Use a private FlagSet rather than flag.CommandLine: the harness package
-	// also registers a "-shard" flag at package init for the test binary, and
-	// since the runner imports harness for RunCommand etc. that registration
-	// would conflict with our own --shard if both used the global FlagSet.
 	fs := flag.NewFlagSet("runner", flag.ExitOnError)
 	fs.SetOutput(os.Stdout)
 
