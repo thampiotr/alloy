@@ -68,7 +68,7 @@ func main() {
 
 	defer func() {
 		if cfg.reuseCluster {
-			logf("reuse mode enabled; keeping cluster %s", clusterName)
+			util.Logf("reuse mode enabled; keeping cluster %s", clusterName)
 			return
 		}
 		_ = util.Step("delete kind cluster (post-test)", func() error {
@@ -82,7 +82,7 @@ func main() {
 	}{
 		{"build alloy image", func() error { return maybeBuildAlloyImage(cfg) }},
 		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
-		{"configure kubeconfig env", func() error { return configureKubeEnv(cfg) }},
+		{"configure kubeconfig env", func() error { return configureEnvVariables(cfg) }},
 		{"clean reused cluster namespaces", func() error { return cleanReusedClusterNamespaces(cfg) }},
 		{"load alloy image into kind", func() error { return loadAlloyImage(cfg) }},
 		{"run go tests", func() error { return runGoTests(cfg) }},
@@ -142,7 +142,7 @@ func maybeBuildAlloyImage(cfg config) error {
 	if !cfg.skipAlloyBuild {
 		return harness.RunCommand("make", "alloy-image")
 	}
-	logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
+	util.Logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
 	return harness.RunCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
 }
 
@@ -153,10 +153,10 @@ func ensureCluster(cfg config) error {
 	}
 	if exists {
 		if cfg.reuseCluster {
-			logf("reusing existing cluster %s", clusterName)
+			util.Logf("reusing existing cluster %s", clusterName)
 			return nil
 		}
-		logf("cluster already exists, deleting stale cluster first")
+		util.Logf("cluster already exists, deleting stale cluster first")
 		if err := harness.RunCommand("kind", "delete", "cluster", "--name", clusterName); err != nil {
 			return err
 		}
@@ -192,18 +192,18 @@ func cleanReusedClusterNamespaces(cfg config) error {
 	if len(leftovers) == 0 {
 		return nil
 	}
-	fmt.Println("[k8s-itest] reuse-cluster: the following non-system namespaces are leftover from a previous run and will be deleted before tests start:")
+	util.Logf("reuse-cluster: the following non-system namespaces are leftover from a previous run and will be deleted before tests start:")
 	for _, ns := range leftovers {
 		fmt.Printf("  - %s\n", ns)
 	}
-	fmt.Print("[k8s-itest] proceed? (y/N) ")
+	fmt.Print(util.LogPrefix + "proceed? (y/N) ")
 	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 	answer = strings.ToLower(strings.TrimSpace(answer))
 	if answer != "y" && answer != "yes" {
 		return errors.New("aborted by user; rerun without --reuse-cluster or clean the cluster manually")
 	}
 	for _, ns := range leftovers {
-		logf("deleting namespace %s", ns)
+		util.Logf("deleting namespace %s", ns)
 		if err := harness.RunCommand("kubectl", "--kubeconfig", cfg.kubeconfig,
 			"delete", "namespace", ns, "--wait=true", "--timeout=10m",
 		); err != nil {
@@ -254,7 +254,7 @@ func clusterExists() (bool, error) {
 	return false, scanner.Err()
 }
 
-func configureKubeEnv(cfg config) error {
+func configureEnvVariables(cfg config) error {
 	// 0o600: kubeconfig holds cluster credentials; kubectl emits an
 	// "insecure permissions" warning if it's readable by group/other.
 	file, err := os.OpenFile(cfg.kubeconfig, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
@@ -309,8 +309,4 @@ func runGoTests(cfg config) error {
 	return util.Step("go test "+strings.Join(patterns, " "), func() error {
 		return harness.RunCommand("go", args...)
 	})
-}
-
-func logf(format string, args ...any) {
-	fmt.Printf("[k8s-itest] "+format+"\n", args...)
 }

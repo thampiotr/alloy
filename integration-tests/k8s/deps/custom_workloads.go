@@ -59,7 +59,7 @@ func (w *CustomWorkloads) Cleanup() {
 		// Render failures during Cleanup are unexpected (Install would have
 		// caught them), but don't escalate beyond a log line: Cleanup must
 		// always be best-effort.
-		fmt.Printf("[k8s-itest] custom-workloads cleanup render failed: %v\n", err)
+		util.Logf("custom-workloads cleanup render failed: %v", err)
 		return
 	}
 	_ = harness.RunCommandStdin(manifest, "kubectl", "delete", "-f", "-",
