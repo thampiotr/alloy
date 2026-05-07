@@ -56,7 +56,7 @@ func main() {
 		os.Exit(1)
 	}
 	if cfg.interactive {
-		if err := runInteractive(&cfg); err != nil {
+		if err := configureInteractive(&cfg); err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
@@ -83,7 +83,6 @@ func main() {
 		{"build alloy image", func() error { return maybeBuildAlloyImage(cfg) }},
 		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
 		{"configure kubeconfig env", func() error { return configureEnvVariables(cfg) }},
-		{"clean reused cluster namespaces", func() error { return cleanReusedClusterNamespaces(cfg) }},
 		{"load alloy image into kind", func() error { return loadAlloyImage(cfg) }},
 		{"run go tests", func() error { return runGoTests(cfg) }},
 	}
@@ -110,7 +109,7 @@ func parseFlags() (config, error) {
 
 	var pkgFlag string
 	flag.CommandLine.SetOutput(os.Stdout)
-	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run; without this flag the runner deletes any existing cluster up-front")
+	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse the existing kind cluster and keep it after the run. The runner does NOT clean leftover namespaces, so a flaky previous run can fail with AlreadyExists; rerun without this flag to recreate the cluster from scratch")
 	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
@@ -162,77 +161,6 @@ func ensureCluster(cfg config) error {
 		}
 	}
 	return harness.RunCommand("kind", "create", "cluster", "--name", clusterName)
-}
-
-// systemNamespaces are namespaces that ship with kind/Kubernetes itself or
-// that the runner installs cluster-wide (e.g. the prometheus-operator
-// Deployment lives in `default`). They are never deleted by
-// cleanReusedClusterNamespaces.
-var systemNamespaces = map[string]struct{}{
-	"default":            {},
-	"kube-system":        {},
-	"kube-public":        {},
-	"kube-node-lease":    {},
-	"local-path-storage": {},
-}
-
-// cleanReusedClusterNamespaces is a safety net for --reuse-cluster: when the
-// kind cluster is being reused, any non-system namespaces from a previous
-// (possibly aborted) run can produce "AlreadyExists" errors during install.
-// We list them, ask the user to confirm, then delete them. No-op without
-// --reuse-cluster, on a fresh cluster, or when no leftover namespaces exist.
-func cleanReusedClusterNamespaces(cfg config) error {
-	if !cfg.reuseCluster {
-		return nil
-	}
-	leftovers, err := listNonSystemNamespaces(cfg.kubeconfig)
-	if err != nil {
-		return fmt.Errorf("list namespaces: %w", err)
-	}
-	if len(leftovers) == 0 {
-		return nil
-	}
-	util.Logf("reuse-cluster: the following non-system namespaces are leftover from a previous run and will be deleted before tests start:")
-	for _, ns := range leftovers {
-		fmt.Printf("  - %s\n", ns)
-	}
-	fmt.Print(util.LogPrefix + "proceed? (y/N) ")
-	answer, _ := bufio.NewReader(os.Stdin).ReadString('\n')
-	answer = strings.ToLower(strings.TrimSpace(answer))
-	if answer != "y" && answer != "yes" {
-		return errors.New("aborted by user; rerun without --reuse-cluster or clean the cluster manually")
-	}
-	for _, ns := range leftovers {
-		util.Logf("deleting namespace %s", ns)
-		if err := harness.RunCommand("kubectl", "--kubeconfig", cfg.kubeconfig,
-			"delete", "namespace", ns, "--wait=true", "--timeout=10m",
-		); err != nil {
-			return fmt.Errorf("delete namespace %q: %w", ns, err)
-		}
-	}
-	return nil
-}
-
-func listNonSystemNamespaces(kubeconfig string) ([]string, error) {
-	cmd := exec.Command("kubectl", "--kubeconfig", kubeconfig,
-		"get", "namespaces", "-o", "jsonpath={.items[*].metadata.name}",
-	)
-	out, err := cmd.Output()
-	if err != nil {
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
-			return nil, fmt.Errorf("kubectl get namespaces: %s", strings.TrimSpace(string(ee.Stderr)))
-		}
-		return nil, err
-	}
-	var leftovers []string
-	for _, ns := range strings.Fields(string(out)) {
-		if _, isSystem := systemNamespaces[ns]; isSystem {
-			continue
-		}
-		leftovers = append(leftovers, ns)
-	}
-	return leftovers, nil
 }
 
 func clusterExists() (bool, error) {
