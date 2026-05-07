@@ -27,8 +27,10 @@ type config struct {
 	skipAlloy     bool
 	shard         string
 	packageScope  string
+	packages      []string
 	runRegex      string
 	promOpVersion string
+	interactive   bool
 }
 
 func main() {
@@ -46,6 +48,12 @@ func main() {
 	if err := os.Chdir(cfg.repoRoot); err != nil {
 		fmt.Fprintf(os.Stderr, "change dir: %v\n", err)
 		os.Exit(1)
+	}
+	if cfg.interactive {
+		if err := runInteractive(&cfg); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
 	if err := os.MkdirAll(filepath.Dir(cfg.kubeconfig), 0o755); err != nil {
 		fmt.Fprintf(os.Stderr, "create kubeconfig dir: %v\n", err)
@@ -123,6 +131,7 @@ func parseFlags() (config, error) {
 	flag.StringVar(&cfg.packageScope, "package", cfg.packageScope, "Run one package path")
 	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to go test")
 	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
+	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-image, shard/packages) via an interactive menu before running")
 	flag.Usage = func() {
 		_, _ = fmt.Fprintln(flag.CommandLine.Output(), "Usage: go run ./integration-tests/k8s/runner [flags]")
 		_, _ = fmt.Fprintln(flag.CommandLine.Output())
@@ -307,17 +316,27 @@ func installPrometheusOperator(version string) error {
 }
 
 func runGoTests(cfg config) error {
-	args := []string{"test", "-v", `-tags=gore2regex`, "-timeout", "30m"}
-	if cfg.runRegex != "" {
-		args = append(args, "-run", cfg.runRegex)
+	pkgs := cfg.packages
+	if len(pkgs) == 0 {
+		pkgs = []string{cfg.packageScope}
 	}
-	args = append(args, cfg.packageScope)
-	if cfg.shard != "" {
-		logf("running shard %s", cfg.shard)
-		args = append(args, "-args", "-shard="+cfg.shard)
+	for _, pkg := range pkgs {
+		args := []string{"test", "-v", `-tags=gore2regex`, "-timeout", "30m"}
+		if cfg.runRegex != "" {
+			args = append(args, "-run", cfg.runRegex)
+		}
+		args = append(args, pkg)
+		if cfg.shard != "" {
+			logf("running shard %s on %s", cfg.shard, pkg)
+			args = append(args, "-args", "-shard="+cfg.shard)
+		} else {
+			logf("running go test %s", pkg)
+		}
+		if err := runCommand("go", args...); err != nil {
+			return err
+		}
 	}
-	logf("running go test %s", cfg.packageScope)
-	return runCommand("go", args...)
+	return nil
 }
 
 func runCommand(name string, args ...string) error {

@@ -23,12 +23,12 @@ func TestMimirAlerts(t *testing.T) {
 		ConfigPath: "./config/config.alloy",
 		ValuesPath: "./config/alloy-values.yaml",
 	})
-	workloads := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
+	extraManifests := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
 		Path: "./config/workloads.yaml",
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		Dependencies: []harness.Dependency{ns, workloads, mimir, alloy},
+		Dependencies: []harness.Dependency{ns, extraManifests, mimir, alloy},
 	})
 	defer kt.Cleanup(t)
 

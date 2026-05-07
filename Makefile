@@ -18,7 +18,8 @@
 ##   test                  Run tests
 ##   lint                  Lint code
 ##   integration-test      Run integration tests
-##   integration-test-k8s  Run Kubernetes integration tests
+##   integration-test-k8s            Run Kubernetes integration tests (CI mode)
+##   integration-test-k8s-local-dev  Run Kubernetes integration tests via interactive menu
 ##
 ## Targets for building binaries:
 ##
@@ -205,6 +206,12 @@ integration-test-docker:
 .PHONY: integration-test-k8s
 integration-test-k8s:
 	go run ./integration-tests/k8s/runner $(RUN_ARGS)
+
+# Interactive mode for local development: pick reuse-cluster, skip-alloy-image,
+# and shard/packages from a TUI menu before tests run.
+.PHONY: integration-test-k8s-local-dev
+integration-test-k8s-local-dev:
+	go run ./integration-tests/k8s/runner --interactive $(RUN_ARGS)
 
 # Windows service integration test. Runs only on Windows with Administrator privileges.
 # Builds the Windows installer, runs it, verifies the Alloy service, then uninstalls.
