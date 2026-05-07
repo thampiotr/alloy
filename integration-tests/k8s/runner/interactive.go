@@ -13,13 +13,13 @@ import (
 )
 
 // configureInteractive presents a small TUI form letting the developer pick the
-// commonly tweaked runner options (reuse cluster, skip alloy image, filter by
+// commonly tweaked runner options (reuse cluster, skip image builds, filter by
 // shard or by packages) and writes the choices into cfg before tests run.
 //
-// Both "reuse cluster" and "skip alloy image" default to selected because
+// Both "reuse cluster" and "skip image builds" default to selected because
 // that's the typical dev-machine flow; the user can deselect them in the form.
 func configureInteractive(cfg *config) error {
-	runOpts := []string{"reuse-cluster", "skip-alloy-build"}
+	runOpts := []string{"reuse-cluster", "skip-image-builds"}
 	filterMode := "all"
 	shard := cfg.shard
 	if shard == "" {
@@ -41,7 +41,7 @@ func configureInteractive(cfg *config) error {
 				Title("Run options").
 				Options(
 					huh.NewOption("Reuse kind cluster if one exists", "reuse-cluster").Selected(true),
-					huh.NewOption("Skip Alloy image build", "skip-alloy-build").Selected(true),
+					huh.NewOption("Skip image builds (alloy, prom-gen)", "skip-image-builds").Selected(true),
 				).
 				Value(&runOpts),
 		),
@@ -80,7 +80,7 @@ func configureInteractive(cfg *config) error {
 	}
 
 	cfg.reuseCluster = slices.Contains(runOpts, "reuse-cluster")
-	cfg.skipAlloyBuild = slices.Contains(runOpts, "skip-alloy-build")
+	cfg.skipImageBuilds = slices.Contains(runOpts, "skip-image-builds")
 	switch filterMode {
 	case "all":
 		cfg.shard = ""

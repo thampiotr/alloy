@@ -11,18 +11,14 @@ import (
 //go:embed manifests/prom-gen.yaml
 var promGenManifest string
 
-const (
-	promGenImage = "prom-gen:latest"
-	// TODO: currently we use the one from docker integration tests. Consider
-	// moving it to the k8s integration tests in the future.
-	promGenDockerfile = "integration-tests/docker/configs/prom-gen/Dockerfile"
-	promGenSelector   = "app=prom-gen"
-)
+// promGenSelector matches the single prom-gen pod created from
+// manifests/prom-gen.yaml. The image itself ("prom-gen:latest") is built
+// and kind-loaded by the runner — see Makefile target `prom-gen-image` and
+// runner.maybeBuildImages — so this dep only has to apply the manifest.
+const promGenSelector = "app=prom-gen"
 
 // PromGen is a small Go HTTP server that emits Prometheus metrics. It's used
 // as a scrape target by tests that exercise prometheus operator components.
-// Owns its docker image, Deployment + Service manifest, and the readiness
-// wait, so a test only has to add one entry to its dependency list.
 type PromGen struct {
 	opts      PromGenOptions
 	installed bool
@@ -39,12 +35,9 @@ func NewPromGen(opts PromGenOptions) *PromGen {
 
 func (p *PromGen) Name() string { return "prom-gen" }
 
-func (p *PromGen) Install(ctx *harness.TestContext) error {
+func (p *PromGen) Install(_ *harness.TestContext) error {
 	if p.opts.Namespace == "" {
 		return fmt.Errorf("prom-gen namespace is required")
-	}
-	if err := ensureKindImage(promGenImage, true, promGenDockerfile, "."); err != nil {
-		return err
 	}
 	if err := util.Step("apply prom-gen manifest", func() error {
 		return harness.RunCommandStdin(promGenManifest,

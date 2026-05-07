@@ -11,7 +11,6 @@ const (
 	managedClusterEnv  = "ALLOY_TESTS_MANAGED_CLUSTER"
 	kubeconfigEnv      = "ALLOY_TESTS_KUBECONFIG"
 	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
-	repoRootEnv        = "ALLOY_TESTS_REPO_ROOT"
 )
 
 // KindClusterName returns the name of the kind cluster the test runner is
@@ -19,17 +18,6 @@ const (
 // `kind load docker-image` should call this rather than hardcoding a name.
 func KindClusterName() string {
 	return os.Getenv(kindClusterNameEnv)
-}
-
-// RepoRoot returns the absolute path to the repository root as exported by
-// the test runner, or "" when not set. Dependencies that need to reference
-// files outside their package directory (e.g. a Dockerfile under
-// integration-tests/docker/...) should call this — `go test` runs each
-// test binary with the test's package directory as the working directory,
-// not the repo root, so relative paths from the repo root won't resolve
-// without it.
-func RepoRoot() string {
-	return os.Getenv(repoRootEnv)
 }
 
 func managedClusterEnabled() bool {

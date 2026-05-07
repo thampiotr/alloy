@@ -207,7 +207,7 @@ integration-test-docker:
 integration-test-k8s:
 	go run ./integration-tests/k8s/runner $(RUN_ARGS)
 
-# Interactive mode for local development: pick reuse-cluster, skip-alloy-build,
+# Interactive mode for local development: pick reuse-cluster, skip-image-builds,
 # and shard/packages from a TUI menu before tests run.
 .PHONY: integration-test-k8s-local-dev
 integration-test-k8s-local-dev:
@@ -270,6 +270,13 @@ images: alloy-image
 
 alloy-image:
 	DOCKER_BUILDKIT=1 docker build $(DOCKER_FLAGS) -t $(ALLOY_IMAGE) -f Dockerfile .
+
+# Test fixture image used by the k8s integration tests as a Prometheus scrape
+# target. The runner builds this alongside alloy-image so the tests don't have
+# to call `docker build` themselves.
+.PHONY: prom-gen-image
+prom-gen-image:
+	DOCKER_BUILDKIT=1 docker build $(DOCKER_FLAGS) -t prom-gen:latest -f integration-tests/docker/configs/prom-gen/Dockerfile .
 
 .PHONY: images-windows alloy-image-windows
 images: alloy-image-windows

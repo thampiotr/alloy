@@ -40,7 +40,7 @@ func (b *BlackboxExporter) Install(ctx *harness.TestContext) error {
 	if b.opts.Namespace == "" {
 		return fmt.Errorf("blackbox-exporter namespace is required")
 	}
-	if err := ensureKindImage(blackboxExporterImage, false, "", ""); err != nil {
+	if err := ensureKindImage(blackboxExporterImage); err != nil {
 		return err
 	}
 	if err := util.Step("apply blackbox-exporter manifest", func() error {

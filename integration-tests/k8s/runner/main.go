@@ -20,7 +20,8 @@ const (
 	managedEnv         = "ALLOY_TESTS_MANAGED_CLUSTER"
 	alloyImageEnv      = "ALLOY_TESTS_IMAGE"
 	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
-	repoRootEnv        = "ALLOY_TESTS_REPO_ROOT"
+
+	promGenImage = "prom-gen:latest"
 )
 
 // defaultTestPackages is the fallback `go test` target when neither the
@@ -29,14 +30,14 @@ const (
 const defaultTestPackages = "./integration-tests/k8s/tests/..."
 
 type config struct {
-	repoRoot       string
-	kubeconfig     string
-	alloyImage     string
-	reuseCluster   bool
-	skipAlloyBuild bool
-	shard          string
-	packages       []string
-	interactive    bool
+	repoRoot        string
+	kubeconfig      string
+	alloyImage      string
+	reuseCluster    bool
+	skipImageBuilds bool
+	shard           string
+	packages        []string
+	interactive     bool
 }
 
 func main() {
@@ -80,10 +81,10 @@ func main() {
 		name string
 		fn   func() error
 	}{
-		{"build alloy image", func() error { return maybeBuildAlloyImage(cfg) }},
+		{"build images", func() error { return maybeBuildImages(cfg) }},
 		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
 		{"configure kubeconfig env", func() error { return configureEnvVariables(cfg) }},
-		{"load alloy image into kind", func() error { return loadAlloyImage(cfg) }},
+		{"load images into kind", func() error { return loadImages(cfg) }},
 		{"run go tests", func() error { return runGoTests(cfg) }},
 	}
 	for _, s := range steps {
@@ -112,11 +113,11 @@ func parseFlags() (config, error) {
 
 	var pkgFlag string
 	fs.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse the existing kind cluster and keep it after the run. The runner does NOT clean leftover namespaces, so a flaky previous run can fail with AlreadyExists; rerun without this flag to recreate the cluster from scratch")
-	fs.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
+	fs.BoolVar(&cfg.skipImageBuilds, "skip-image-builds", false, "Skip building local docker images (alloy, prom-gen); they must already exist in the local docker daemon. CI uses this after restoring images built in a separate job")
 	fs.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	fs.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
 	fs.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
-	fs.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
+	fs.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-image-builds, shard/packages) via an interactive menu before running")
 	fs.Usage = func() {
 		fmt.Println("Usage: go run ./integration-tests/k8s/runner [flags]")
 		fmt.Println()
@@ -140,12 +141,30 @@ func requireCommands(commands ...string) error {
 	return nil
 }
 
-func maybeBuildAlloyImage(cfg config) error {
-	if !cfg.skipAlloyBuild {
-		return harness.RunCommand("make", "alloy-image")
+// maybeBuildImages builds every image the test suite needs: the Alloy image
+// under test and any test fixture images (currently just prom-gen). When
+// --skip-image-builds is set, images must already be present in the local
+// docker daemon — CI uses this after a separate "build images" job restores
+// them into the runner.
+func maybeBuildImages(cfg config) error {
+	images := []string{cfg.alloyImage, promGenImage}
+	if cfg.skipImageBuilds {
+		util.Logf("--skip-image-builds set; expecting images already in local docker daemon: %v", images)
+		for _, image := range images {
+			if err := harness.RunCommandQuiet("docker", "image", "inspect", image); err != nil {
+				return fmt.Errorf("image %q not present locally: %w", image, err)
+			}
+		}
+		return nil
 	}
-	util.Logf("--skip-alloy-build set; expecting %q already in local docker daemon", cfg.alloyImage)
-	return harness.RunCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
+	if err := util.Step("make alloy-image", func() error {
+		return harness.RunCommand("make", "alloy-image")
+	}); err != nil {
+		return err
+	}
+	return util.Step("make prom-gen-image", func() error {
+		return harness.RunCommand("make", "prom-gen-image")
+	})
 }
 
 func ensureCluster(cfg config) error {
@@ -203,16 +222,21 @@ func configureEnvVariables(cfg config) error {
 	if err := os.Setenv(alloyImageEnv, cfg.alloyImage); err != nil {
 		return err
 	}
-	if err := os.Setenv(kindClusterNameEnv, clusterName); err != nil {
-		return err
-	}
-	return os.Setenv(repoRootEnv, cfg.repoRoot)
+	return os.Setenv(kindClusterNameEnv, clusterName)
 }
 
-// loadAlloyImage loads the Alloy image (the artifact under test) into the kind
-// cluster.
-func loadAlloyImage(cfg config) error {
-	return harness.RunCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
+// loadImages loads the Alloy image (the artifact under test) and the test
+// fixture images into the kind cluster. Tests then reference these images by
+// name without having to build or kind-load them themselves.
+func loadImages(cfg config) error {
+	for _, image := range []string{cfg.alloyImage, promGenImage} {
+		if err := util.Step("kind load "+image, func() error {
+			return harness.RunCommand("kind", "load", "docker-image", image, "--name", clusterName)
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // runGoTests runs `go test -v` once for the configured patterns. With a
