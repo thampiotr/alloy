@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	intTestLabel  = "alloy_int_test"
+	testNameLabel = "alloy_test_name"
 	timeout       = 5 * time.Minute
 	retryInterval = 500 * time.Millisecond
 
@@ -39,22 +39,6 @@ type MetricsResponse struct {
 	Data   []struct {
 		Name string `json:"__name__"`
 	} `json:"data"`
-}
-
-type MetadataResponse struct {
-	Status string                     `json:"status"`
-	Data   map[string][]MetadataEntry `json:"data"`
-}
-
-type MetadataEntry struct {
-	Type string `json:"type"`
-	Help string `json:"help"`
-	Unit string `json:"unit"`
-}
-
-type ExpectedMetadata struct {
-	Type string
-	Help string
 }
 
 // Mimir runs a single-pod Mimir in monolithic mode (target=all,alertmanager)
@@ -131,7 +115,12 @@ func (m *Mimir) Cleanup() {
 	)
 }
 
-func (m *Mimir) QueryMetrics(t *testing.T, alloyIntTest string, expectedMetrics []string) {
+// QueryMetrics polls Mimir for series labelled with alloy_test_name=testName
+// and asserts every expected metric name is present. testName is the value
+// Alloy stamps on the metric series via prometheus.relabel (see each test's
+// config/config.alloy); it lets a future shared-Mimir setup distinguish
+// metrics from different tests.
+func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []string) {
 	t.Helper()
 	mimirURL := m.endpoint("/prometheus/api/v1/")
 
@@ -139,7 +128,7 @@ func (m *Mimir) QueryMetrics(t *testing.T, alloyIntTest string, expectedMetrics 
 		queryURL, err := url.Parse(mimirURL + "series")
 		require.NoError(c, err)
 		values := queryURL.Query()
-		values.Add("match[]", "{"+intTestLabel+"=\""+alloyIntTest+"\"}")
+		values.Add("match[]", "{"+testNameLabel+"=\""+testName+"\"}")
 		queryURL.RawQuery = values.Encode()
 		resp := curl(c, queryURL.String())
 
@@ -160,40 +149,7 @@ func (m *Mimir) QueryMetrics(t *testing.T, alloyIntTest string, expectedMetrics 
 			}
 		}
 
-		require.Emptyf(c, missingMetrics, "missing expected metrics for %s=%s: %v found=%v", intTestLabel, alloyIntTest, missingMetrics, actualMetrics)
-	}, timeout, retryInterval)
-}
-
-func (m *Mimir) QueryMetadata(t *testing.T, expectedMetadata map[string]ExpectedMetadata) {
-	t.Helper()
-	mimirURL := m.endpoint("/prometheus/api/v1/")
-
-	require.EventuallyWithT(t, func(c *assert.CollectT) {
-		resp := curl(c, mimirURL+"metadata")
-		var metadataResponse MetadataResponse
-		err := json.Unmarshal([]byte(resp), &metadataResponse)
-		require.NoError(c, err, "failed to parse metadata response: %s", resp)
-		require.Equal(c, "success", metadataResponse.Status, "mimir metadata query failed: %s", resp)
-
-		var missingMetrics []string
-		var mismatchedMetrics []string
-		for metricName, expected := range expectedMetadata {
-			entries, exists := metadataResponse.Data[metricName]
-			if !exists || len(entries) == 0 {
-				missingMetrics = append(missingMetrics, metricName)
-				continue
-			}
-			entry := entries[0]
-			if expected.Type != "" && entry.Type != expected.Type {
-				mismatchedMetrics = append(mismatchedMetrics, metricName+": expected type="+expected.Type+", got="+entry.Type)
-			}
-			if expected.Help != "" && entry.Help != expected.Help {
-				mismatchedMetrics = append(mismatchedMetrics, metricName+": expected help="+expected.Help+", got="+entry.Help)
-			}
-		}
-
-		require.Emptyf(c, missingMetrics, "missing expected metadata for metrics: %v", missingMetrics)
-		require.Emptyf(c, mismatchedMetrics, "mismatched metadata: %v", mismatchedMetrics)
+		require.Emptyf(c, missingMetrics, "missing expected metrics for %s=%s: %v found=%v", testNameLabel, testName, missingMetrics, actualMetrics)
 	}, timeout, retryInterval)
 }
 

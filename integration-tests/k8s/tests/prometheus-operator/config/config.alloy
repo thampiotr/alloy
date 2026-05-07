@@ -20,7 +20,7 @@ prometheus.relabel "servicemonitors" {
   forward_to = [prometheus.remote_write.mimir.receiver]
   rule {
     action       = "replace"
-    target_label = "alloy_int_test"
+    target_label = "alloy_test_name"
     replacement  = "servicemonitor"
   }
   rule {
@@ -46,7 +46,7 @@ prometheus.relabel "podmonitors" {
   forward_to = [prometheus.remote_write.mimir.receiver]
   rule {
     action       = "replace"
-    target_label = "alloy_int_test"
+    target_label = "alloy_test_name"
     replacement  = "podmonitor"
   }
   rule {
@@ -72,7 +72,7 @@ prometheus.relabel "probes" {
   forward_to = [prometheus.remote_write.mimir.receiver]
   rule {
     action       = "replace"
-    target_label = "alloy_int_test"
+    target_label = "alloy_test_name"
     replacement  = "probe"
   }
   rule {
@@ -98,7 +98,7 @@ prometheus.relabel "scrapeconfigs" {
   forward_to = [prometheus.remote_write.mimir.receiver]
   rule {
     action       = "replace"
-    target_label = "alloy_int_test"
+    target_label = "alloy_test_name"
     replacement  = "scrapeconfig"
   }
   rule {
