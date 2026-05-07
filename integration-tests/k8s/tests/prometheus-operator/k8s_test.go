@@ -14,24 +14,24 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 	promOp := deps.NewPrometheusOperator(deps.PrometheusOperatorOptions{})
 	mimir := deps.NewMimir(deps.MimirOptions{Namespace: ns.Name()})
-	alloy := deps.NewAlloy(deps.AlloyOptions{
-		Namespace:  ns.Name(),
-		Release:    "alloy-prometheus-operator",
-		ConfigPath: "./config/config.alloy",
-		ValuesPath: "./config/alloy-values.yaml",
-	})
 	promGen := deps.NewPromGen(deps.PromGenOptions{Namespace: ns.Name()})
 	blackbox := deps.NewBlackboxExporter(deps.BlackboxExporterOptions{Namespace: ns.Name()})
 	monitoringCRDs := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
 		Path: "./config/workloads.yaml",
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
-	kt := harness.Setup(t, harness.Options{
+	alloy := deps.NewAlloy(deps.AlloyOptions{
+		Namespace:  ns.Name(),
+		Release:    "alloy-prometheus-operator",
+		ConfigPath: "./config/config.alloy",
+		ValuesPath: "./config/alloy-values.yaml",
+	})
+	harness.Setup(t, harness.Options{
 		Dependencies: []harness.Dependency{ns, promOp, promGen, blackbox, monitoringCRDs, mimir, alloy},
 	})
-	defer kt.Cleanup(t)
 
 	t.Run("ServiceMonitors", func(t *testing.T) {
+		t.Parallel()
 		// Check that Mimir received metrics from the ServiceMonitor target.
 		// All metrics are prefixed with test_servicemonitors_ via relabeling.
 		mimir.QueryMetrics(t, "servicemonitor", []string{
@@ -41,6 +41,7 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 
 	t.Run("PodMonitors", func(t *testing.T) {
+		t.Parallel()
 		// Check that Mimir received metrics from the PodMonitor target.
 		// All metrics are prefixed with test_podmonitors_ via relabeling.
 		mimir.QueryMetrics(t, "podmonitor", []string{
@@ -50,6 +51,7 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 
 	t.Run("Probes", func(t *testing.T) {
+		t.Parallel()
 		// Check that Mimir received metrics from the Probe target.
 		// All metrics are prefixed with test_probes_ via relabeling.
 		mimir.QueryMetrics(t, "probe", []string{
@@ -59,6 +61,7 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 
 	t.Run("ScrapeConfigs", func(t *testing.T) {
+		t.Parallel()
 		// Check that Mimir received metrics from the ScrapeConfig target.
 		// All metrics are prefixed with test_scrapeconfigs_ via relabeling.
 		mimir.QueryMetrics(t, "scrapeconfig", []string{

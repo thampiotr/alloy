@@ -1,7 +1,8 @@
 // Package harness wires Go tests in integration-tests/k8s/tests/... to the
 // runner-managed kind cluster. Tests call Setup with a list of Dependencies
-// (deps.Namespace, deps.Mimir, ...); Setup installs them in order, returns a
-// *TestContext, and tests defer Cleanup which tears them down in reverse.
+// (deps.Namespace, deps.Mimir, ...); Setup installs them in order and
+// registers a t.Cleanup that tears them down in reverse after the test (and
+// any parallel subtests) completes.
 package harness
 
 import (
@@ -62,6 +63,14 @@ func Setup(t *testing.T, opts Options) *TestContext {
 		pkgPath: derivePkgPath(callerFile),
 	}
 
+	// Register cleanup BEFORE installing anything: if a dep installs
+	// successfully but a later one fails, t.Cleanup still tears down what
+	// was already installed. Using t.Cleanup (not defer in the test) is also
+	// what makes parallel subtests safe — defer would run as soon as the
+	// parent function body returns, which happens before paused subtests
+	// resume.
+	t.Cleanup(func() { ctx.cleanup(t) })
+
 	for _, dep := range opts.Dependencies {
 		err := util.Step("install dep "+dep.Name(), func() error { return dep.Install(ctx) })
 		if err != nil {
@@ -89,7 +98,7 @@ func derivePkgPath(callerFile string) string {
 	return filepath.Dir(callerFile)
 }
 
-func (ctx *TestContext) Cleanup(t *testing.T) {
+func (ctx *TestContext) cleanup(t *testing.T) {
 	t.Helper()
 
 	if t.Failed() {

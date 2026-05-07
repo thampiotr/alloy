@@ -20,8 +20,7 @@ const defaultPrometheusOperatorVersion = "v0.81.0"
 // Kubernetes API. We install it anyway because the upstream bundle ships
 // everything together and splitting it has no benefit.
 type PrometheusOperator struct {
-	opts      PrometheusOperatorOptions
-	installed bool
+	opts PrometheusOperatorOptions
 }
 
 type PrometheusOperatorOptions struct {
@@ -50,7 +49,6 @@ func (p *PrometheusOperator) Install(_ *harness.TestContext) error {
 	); err != nil {
 		return fmt.Errorf("apply prometheus-operator bundle %s: %w", v, err)
 	}
-	p.installed = true
 	return nil
 }
 

@@ -25,19 +25,18 @@ func TestMimirAlerts(t *testing.T) {
 		Path: "./config/workloads.yaml",
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
-	kt := harness.Setup(t, harness.Options{
+	harness.Setup(t, harness.Options{
 		Dependencies: []harness.Dependency{ns, promOp, extraManifests, mimir, alloy},
 	})
-	defer kt.Cleanup(t)
 
 	t.Run("Initial Config loaded", func(t *testing.T) {
-		mimir.CheckConfig(t, "./expected/expected_1.yml")
+		mimir.CheckAlertsConfig(t, "./expected/expected_1.yml")
 	})
 
 	t.Run("Deleted Config works", func(t *testing.T) {
 		require.NoError(t, harness.Kubectl("delete", "alertmanagerconfig", "alertmgr-config2", "--namespace", ns.Name()))
 
 		// Mimir's config should now omit the deleted Alertmanagerconfig CRD.
-		mimir.CheckConfig(t, "./expected/expected_2.yml")
+		mimir.CheckAlertsConfig(t, "./expected/expected_2.yml")
 	})
 }

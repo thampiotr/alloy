@@ -22,7 +22,7 @@ import (
 
 const (
 	testNameLabel = "alloy_test_name"
-	timeout       = 5 * time.Minute
+	timeout       = 1 * time.Minute
 	retryInterval = 500 * time.Millisecond
 
 	// mimirSelector matches the single Mimir pod created from manifests/mimir.yaml.
@@ -81,7 +81,6 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 		return err
 	}
 	m.installed = true
-	ctx.AddDiagnosticHook("mimir logs", m.diagnosticsHook())
 
 	// Wait for the readiness probe so port-forward and HTTP queries below
 	// connect to a usable Service endpoint. Mimir's /ready returns 200 only
@@ -116,10 +115,7 @@ func (m *Mimir) Cleanup() {
 }
 
 // QueryMetrics polls Mimir for series labelled with alloy_test_name=testName
-// and asserts every expected metric name is present. testName is the value
-// Alloy stamps on the metric series via prometheus.relabel (see each test's
-// config/config.alloy); it lets a future shared-Mimir setup distinguish
-// metrics from different tests.
+// and asserts every expected metric name is present.
 func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []string) {
 	t.Helper()
 	mimirURL := m.endpoint("/prometheus/api/v1/")
@@ -153,7 +149,7 @@ func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []st
 	}, timeout, retryInterval)
 }
 
-func (m *Mimir) CheckConfig(t *testing.T, expectedFile string) {
+func (m *Mimir) CheckAlertsConfig(t *testing.T, expectedFile string) {
 	t.Helper()
 	expectedMimirConfigBytes, err := os.ReadFile(expectedFile)
 	require.NoError(t, err)
@@ -167,18 +163,6 @@ func (m *Mimir) CheckConfig(t *testing.T, expectedFile string) {
 
 func (m *Mimir) endpoint(path string) string {
 	return "http://localhost:" + m.localPort + path
-}
-
-func (m *Mimir) diagnosticsHook() func(context.Context) error {
-	namespace := m.namespace
-	return func(c context.Context) error {
-		// Single Mimir pod in monolithic mode -> one selector covers
-		// distributor, ingester and alertmanager logs.
-		return harness.RunDiagnosticCommands(c, [][]string{
-			{"kubectl", "--namespace", namespace, "logs", "-l", mimirSelector, "--all-containers=true", "--tail", "500"},
-			{"kubectl", "--namespace", namespace, "describe", "pod", "-l", mimirSelector},
-		})
-	}
 }
 
 func startPortForwardWithRetries(namespace string, attempts int) (string, func(), error) {
