@@ -22,6 +22,11 @@ const (
 	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
 )
 
+// defaultTestPackages is the fallback `go test` target when neither the
+// --package flag nor the interactive picker narrows the run. It expands via
+// `go list` to every package under integration-tests/k8s/tests/.
+const defaultTestPackages = "./integration-tests/k8s/tests/..."
+
 type config struct {
 	repoRoot       string
 	kubeconfig     string
@@ -30,10 +35,12 @@ type config struct {
 	reuseCluster   bool
 	skipAlloyBuild bool
 	shard          string
-	packageScope   string
-	packages       []string
-	runRegex       string
-	interactive    bool
+	// packages holds one or more `go test` patterns (paths or `./.../...`
+	// wildcards). runGoTests expands each via `go list` and runs `go test`
+	// once per resolved package so -v output streams in real time.
+	packages    []string
+	runRegex    string
+	interactive bool
 }
 
 func main() {
@@ -58,10 +65,6 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	// 0o700 / 0o600 below: kubectl warns ("WARNING: Kubeconfig ... has
-	// insecure permissions") when the kubeconfig file or its parent
-	// directory is readable by group/other. The file embeds cluster
-	// credentials, so keep both user-only.
 	if err := os.MkdirAll(filepath.Dir(cfg.kubeconfig), 0o700); err != nil {
 		fmt.Fprintf(os.Stderr, "create kubeconfig dir: %v\n", err)
 		os.Exit(1)
@@ -86,7 +89,7 @@ func main() {
 		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
 		{"configure kubeconfig env", func() error { return configureKubeEnv(cfg) }},
 		{"clean reused cluster namespaces", func() error { return cleanReusedClusterNamespaces(cfg) }},
-		{"load alloy image into kind", func() error { return loadImages(cfg) }},
+		{"load alloy image into kind", func() error { return loadAlloyImage(cfg) }},
 		{"run go tests", func() error { return runGoTests(cfg) }},
 	}
 	for _, s := range steps {
@@ -103,25 +106,20 @@ func parseFlags() (config, error) {
 		return config{}, err
 	}
 	repoRoot := wd
-	// Keep transient runner state (kubeconfig, etc.) inside the k8s integration-tests
-	// folder so it's contained and can be ignored by a local .gitignore.
 	kubeconfigPath := filepath.Join(repoRoot, "integration-tests", "k8s", ".tmp", "kubeconfig")
 
 	cfg := config{
-		repoRoot:     repoRoot,
-		kubeconfig:   kubeconfigPath,
-		packageScope: "./integration-tests/k8s/tests/...",
+		repoRoot:   repoRoot,
+		kubeconfig: kubeconfigPath,
 	}
 
-	// With --reuse-cluster, the runner asks the user (interactively) to confirm deletion of any
-	// non-system namespaces left over from a previous run before tests start. This keeps repeated
-	// local runs safe while letting you skip the kind cluster recreation cost.
+	var pkgFlag string
 	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run")
 	flag.BoolVar(&cfg.deleteCluster, "delete-cluster", false, "Delete the kind cluster (if any) before the run; useful to force a clean slate, can be combined with --reuse-cluster")
 	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
-	flag.StringVar(&cfg.packageScope, "package", cfg.packageScope, "Run one package path")
-	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to go test")
+	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or `./.../...` pattern (default: "+defaultTestPackages+")")
+	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to `go test` (e.g. --run TestMimirAlerts to rerun a single test)")
 	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
 	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
 	flag.Usage = func() {
@@ -130,6 +128,9 @@ func parseFlags() (config, error) {
 		flag.PrintDefaults()
 	}
 	flag.Parse()
+	if pkgFlag != "" {
+		cfg.packages = []string{pkgFlag}
+	}
 	return cfg, nil
 }
 
@@ -304,30 +305,30 @@ func configureKubeEnv(cfg config) error {
 	return os.Setenv(kindClusterNameEnv, clusterName)
 }
 
-// loadImages loads the Alloy image (the artifact under test) into the kind
+// loadAlloyImage loads the Alloy image (the artifact under test) into the kind
 // cluster. Test-specific images (prom-gen, blackbox-exporter, etc.) are the
 // responsibility of their respective dependencies in deps/.
-func loadImages(cfg config) error {
+func loadAlloyImage(cfg config) error {
 	return runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
 
-// runGoTests resolves the configured package list (or expands the wildcard
-// scope via `go list`) into individual packages and runs `go test -v` per
-// package. Running one package per invocation is intentional: when `go test`
-// is given multiple packages, it buffers each package's `-v` output until
-// that package finishes, which hides progress and makes hangs invisible.
-// Single-package invocations stream test logs in real time.
+// runGoTests expands each configured pattern via `go list` and runs `go test
+// -v` once per resolved package. Running one package per invocation is
+// intentional: when `go test` is given multiple packages, it buffers each
+// package's `-v` output until that package finishes, which hides progress
+// and makes hangs invisible. Single-package invocations stream test logs in
+// real time.
 func runGoTests(cfg config) error {
-	pkgs := cfg.packages
-	if len(pkgs) == 0 {
-		expanded, err := expandPackages(cfg.packageScope)
-		if err != nil {
-			return err
-		}
-		pkgs = expanded
+	patterns := cfg.packages
+	if len(patterns) == 0 {
+		patterns = []string{defaultTestPackages}
+	}
+	pkgs, err := expandPackages(patterns)
+	if err != nil {
+		return err
 	}
 	if len(pkgs) == 0 {
-		return fmt.Errorf("no test packages matched %q", cfg.packageScope)
+		return fmt.Errorf("no test packages matched %v", patterns)
 	}
 	for _, pkg := range pkgs {
 		args := []string{"test", "-v", "-timeout", "30m"}
@@ -347,26 +348,23 @@ func runGoTests(cfg config) error {
 	return nil
 }
 
-// expandPackages resolves a Go package pattern (which may include `...`) into
-// the matched import paths. We use `go list` rather than walking the
-// filesystem so build tags and module boundaries are honored exactly the way
-// `go test` would have done.
-func expandPackages(pattern string) ([]string, error) {
-	cmd := exec.Command("go", "list", pattern)
+// expandPackages resolves Go package patterns (which may include `...`) into
+// concrete import paths via `go list`. Using `go list` rather than walking
+// the filesystem honors build tags and module boundaries exactly the way
+// `go test` would.
+func expandPackages(patterns []string) ([]string, error) {
+	args := append([]string{"list"}, patterns...)
+	cmd := exec.Command("go", args...)
 	cmd.Env = os.Environ()
 	out, err := cmd.Output()
 	if err != nil {
 		var ee *exec.ExitError
 		if errors.As(err, &ee) {
-			return nil, fmt.Errorf("go list %s: %s", pattern, strings.TrimSpace(string(ee.Stderr)))
+			return nil, fmt.Errorf("go list %v: %s", patterns, strings.TrimSpace(string(ee.Stderr)))
 		}
-		return nil, fmt.Errorf("go list %s: %w", pattern, err)
+		return nil, fmt.Errorf("go list %v: %w", patterns, err)
 	}
-	var pkgs []string
-	for _, p := range strings.Fields(string(out)) {
-		pkgs = append(pkgs, p)
-	}
-	return pkgs, nil
+	return strings.Fields(string(out)), nil
 }
 
 func runCommand(name string, args ...string) error {
