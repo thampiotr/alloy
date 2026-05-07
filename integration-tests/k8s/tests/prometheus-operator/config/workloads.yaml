@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: prom-gen
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
@@ -25,7 +25,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: prom-gen
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     app: prom-gen
 spec:
@@ -40,7 +40,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: blackbox-exporter
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
 spec:
   replicas: 1
   selector:
@@ -71,7 +71,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: blackbox-exporter-config
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
 data:
   blackbox.yml: |
     modules:
@@ -89,7 +89,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: blackbox-exporter
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     app: blackbox-exporter
 spec:
@@ -104,7 +104,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: prom-gen-service-monitor
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
@@ -113,7 +113,7 @@ spec:
       app: prom-gen
   namespaceSelector:
     matchNames:
-      - test-prometheus-operator
+      - ${NAMESPACE}
   endpoints:
     - port: metrics
       interval: 5s
@@ -123,7 +123,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: prom-gen-pod-monitor
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
@@ -132,7 +132,7 @@ spec:
       app: prom-gen
   namespaceSelector:
     matchNames:
-      - test-prometheus-operator
+      - ${NAMESPACE}
   podMetricsEndpoints:
     - port: metrics
       interval: 5s
@@ -142,7 +142,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: Probe
 metadata:
   name: http-probe
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
@@ -150,24 +150,24 @@ spec:
   scrapeTimeout: 3s
   module: http_2xx
   prober:
-    url: blackbox-exporter.test-prometheus-operator.svc:9115
+    url: blackbox-exporter.${NAMESPACE}.svc:9115
     path: /probe
   targets:
     staticConfig:
       static:
-        - http://prom-gen.test-prometheus-operator.svc:9001/metrics
+        - http://prom-gen.${NAMESPACE}.svc:9001/metrics
 ---
 apiVersion: monitoring.coreos.com/v1alpha1
 kind: ScrapeConfig
 metadata:
   name: prom-gen-scrape-config
-  namespace: test-prometheus-operator
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
   staticConfigs:
     - targets:
-        - "prom-gen.test-prometheus-operator.svc:9001"
+        - "prom-gen.${NAMESPACE}.svc:9001"
       labels:
         job: "prom-gen-static"
   metricsPath: /metrics

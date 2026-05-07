@@ -1,0 +1,2 @@
+# Transient runner state: kubeconfig, etc. See integration-tests/k8s/runner/main.go.
+/.tmp/

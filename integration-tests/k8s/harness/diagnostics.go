@@ -27,6 +27,10 @@ func collectFailureDiagnostics(ctx *TestContext) {
 		}
 		fmt.Printf("[k8s-itest] diagnostics hook done name=%q time=%s\n", hook.name, time.Since(start).Round(time.Millisecond))
 	}
-	fmt.Printf("[k8s-itest] repro: make integration-test-k8s RUN_ARGS='--package ./integration-tests/k8s/tests/%s'\n", ctx.name)
+	if ctx.pkgPath != "" {
+		fmt.Printf("[k8s-itest] repro: make integration-test-k8s RUN_ARGS='--package ./%s --run %s'\n", ctx.pkgPath, ctx.name)
+	} else {
+		fmt.Printf("[k8s-itest] repro: make integration-test-k8s RUN_ARGS='--run %s'\n", ctx.name)
+	}
 	fmt.Printf("[k8s-itest] kubeconfig: %s\n", os.Getenv(kubeconfigEnv))
 }

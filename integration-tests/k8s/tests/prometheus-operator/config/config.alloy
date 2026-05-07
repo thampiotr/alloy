@@ -8,7 +8,7 @@ livedebugging {
 
 prometheus.operator.servicemonitors "default" {
   forward_to = [prometheus.relabel.servicemonitors.receiver]
-  namespaces = ["test-prometheus-operator"]
+  namespaces = [sys.env("POD_NAMESPACE")]
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -34,7 +34,7 @@ prometheus.relabel "servicemonitors" {
 
 prometheus.operator.podmonitors "default" {
   forward_to = [prometheus.relabel.podmonitors.receiver]
-  namespaces = ["test-prometheus-operator"]
+  namespaces = [sys.env("POD_NAMESPACE")]
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -60,7 +60,7 @@ prometheus.relabel "podmonitors" {
 
 prometheus.operator.probes "default" {
   forward_to = [prometheus.relabel.probes.receiver]
-  namespaces = ["test-prometheus-operator"]
+  namespaces = [sys.env("POD_NAMESPACE")]
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -86,7 +86,7 @@ prometheus.relabel "probes" {
 
 prometheus.operator.scrapeconfigs "default" {
   forward_to = [prometheus.relabel.scrapeconfigs.receiver]
-  namespaces = ["test-prometheus-operator"]
+  namespaces = [sys.env("POD_NAMESPACE")]
   selector {
     match_labels = {
       "alloy-integration-test" = "true",

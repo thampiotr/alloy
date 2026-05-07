@@ -1,5 +1,5 @@
 remote.kubernetes.configmap "default" {
-  namespace = "test-mimir-alerts-kubernetes"
+  namespace = sys.env("POD_NAMESPACE")
   name      = "alertmgr-global"
 }
 

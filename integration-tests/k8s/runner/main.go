@@ -103,7 +103,9 @@ func parseFlags() (config, error) {
 		return config{}, err
 	}
 	repoRoot := wd
-	kubeconfigPath := filepath.Join(repoRoot, ".tmp", "integration-tests", "k8s", "kubeconfig")
+	// Keep transient runner state (kubeconfig, etc.) inside the k8s integration-tests
+	// folder so it's contained and can be ignored by a local .gitignore.
+	kubeconfigPath := filepath.Join(repoRoot, "integration-tests", "k8s", ".tmp", "kubeconfig")
 
 	cfg := config{
 		repoRoot:      repoRoot,

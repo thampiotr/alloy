@@ -230,8 +230,8 @@ func installMimir(namespace string) error {
 			"--version", "5.8.0",
 			"--namespace", namespace,
 			"--wait",
-			// Compact profile for integration tests: keep only components
-			// required for write/read and alertmanager config checks.
+			// TODO: we should probably use values.yaml instead of --set and keep
+			// mimir-values.yaml in the test config/ directory like we do with alloy.
 			"--set", "ingester.replicas=1",
 			"--set", "querier.replicas=1",
 			"--set", "query_scheduler.enabled=false",
@@ -314,6 +314,7 @@ func pickFreeLocalPort() (string, error) {
 	return port, nil
 }
 
+// TODO: this is used by both alloy and mimir. Move it to util package.
 func runDiagnosticCommands(c context.Context, commands [][]string) error {
 	var errs []string
 	for _, args := range commands {

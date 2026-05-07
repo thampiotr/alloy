@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: alertmgr-global
-  namespace: test-mimir-alerts-kubernetes
+  namespace: ${NAMESPACE}
 data:
   glbl: |
     global:
@@ -24,7 +24,7 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: alertmgr-config1
-  namespace: test-mimir-alerts-kubernetes
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
@@ -45,7 +45,7 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: alertmgr-config2
-  namespace: test-mimir-alerts-kubernetes
+  namespace: ${NAMESPACE}
   labels:
     alloy-integration-test: "true"
 spec:
@@ -65,7 +65,7 @@ apiVersion: monitoring.coreos.com/v1alpha1
 kind: AlertmanagerConfig
 metadata:
   name: alertmgr-config3
-  namespace: test-mimir-alerts-kubernetes
+  namespace: ${NAMESPACE}
 spec:
   route:
     receiver: "null"

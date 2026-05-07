@@ -22,13 +22,14 @@ func TestMimirAlerts(t *testing.T) {
 	})
 	workloads := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
 		Path: "./config/workloads.yaml",
+		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		Name:         "mimir-alerts-kubernetes",
 		Dependencies: []harness.Dependency{ns, workloads, mimir, alloy},
 	})
 	defer kt.Cleanup(t)
 
+	// TODO: waiting for them to be part of their dep struct as method?
 	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/name=alloy")
 	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/component=alertmanager")
 

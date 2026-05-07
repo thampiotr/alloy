@@ -21,9 +21,9 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 	workloads := deps.NewCustomWorkloads(deps.CustomWorkloadsOptions{
 		Path: "./config/workloads.yaml",
+		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		Name: "prometheus-operator",
 		// Order: namespace first, then workloads (defines extra resources
 		// inside the namespace), then mimir, then alloy. Cleanup runs in
 		// reverse, so helm releases are uninstalled before workloads are
