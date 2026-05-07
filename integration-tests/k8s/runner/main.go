@@ -289,63 +289,26 @@ func loadAlloyImage(cfg config) error {
 	return runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
 
-// runGoTests expands the configured patterns via `go list` and runs `go test
-// -v`.
-//
-// Single package: invoked alone so test logs stream in real time (useful
-// when iterating on one test or debugging a hang).
-//
-// Multiple packages: handed to one `go test` call so it parallelises across
-// them up to GOMAXPROCS for shorter wall-clock. The tradeoff is that Go
-// buffers each package's -v output until that package finishes, so chunks
-// arrive per-package rather than line-by-line.
+// runGoTests runs `go test -v` once for the configured patterns. With a
+// single package go test streams logs line-by-line; with multiple packages
+// (e.g. the default `./...` wildcard) it runs them in parallel up to
+// GOMAXPROCS and prints each package's output once that package finishes.
 func runGoTests(cfg config) error {
 	patterns := cfg.packages
 	if len(patterns) == 0 {
 		patterns = []string{defaultTestPackages}
 	}
-	pkgs, err := expandPackages(patterns)
-	if err != nil {
-		return err
-	}
-	if len(pkgs) == 0 {
-		return fmt.Errorf("no test packages matched %v", patterns)
-	}
-
 	args := []string{"test", "-v", "-timeout", "30m"}
 	if cfg.runRegex != "" {
 		args = append(args, "-run", cfg.runRegex)
 	}
-	args = append(args, pkgs...)
-
-	stepName := "go test " + pkgs[0]
-	if len(pkgs) > 1 {
-		stepName = fmt.Sprintf("go test (%d packages, parallel)", len(pkgs))
-	}
+	args = append(args, patterns...)
 	if cfg.shard != "" {
 		args = append(args, "-args", "-shard="+cfg.shard)
-		stepName += " (shard " + cfg.shard + ")"
 	}
-	return util.Step(stepName, func() error { return runCommand("go", args...) })
-}
-
-// expandPackages resolves Go package patterns (which may include `...`) into
-// concrete import paths via `go list`. Using `go list` rather than walking
-// the filesystem honors build tags and module boundaries exactly the way
-// `go test` would.
-func expandPackages(patterns []string) ([]string, error) {
-	args := append([]string{"list"}, patterns...)
-	cmd := exec.Command("go", args...)
-	cmd.Env = os.Environ()
-	out, err := cmd.Output()
-	if err != nil {
-		var ee *exec.ExitError
-		if errors.As(err, &ee) {
-			return nil, fmt.Errorf("go list %v: %s", patterns, strings.TrimSpace(string(ee.Stderr)))
-		}
-		return nil, fmt.Errorf("go list %v: %w", patterns, err)
-	}
-	return strings.Fields(string(out)), nil
+	return util.Step("go test "+strings.Join(patterns, " "), func() error {
+		return runCommand("go", args...)
+	})
 }
 
 func runCommand(name string, args ...string) error {
