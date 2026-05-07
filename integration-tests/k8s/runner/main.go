@@ -100,7 +100,7 @@ func parseFlags() (config, error) {
 		return config{}, err
 	}
 	repoRoot := wd
-	kubeconfigPath := filepath.Join(repoRoot, "integration-tests", "k8s", ".tmp", "kubeconfig")
+	kubeconfigPath := filepath.Join(repoRoot, "integration-tests", "k8s", ".kube", "kubeconfig")
 
 	cfg := config{
 		repoRoot:   repoRoot,

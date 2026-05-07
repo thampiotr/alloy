@@ -1,2 +1,3 @@
-# Transient runner state: kubeconfig, etc. See integration-tests/k8s/runner/main.go.
-/.tmp/
+# Runner-managed kubeconfig for the kind cluster, written by
+# integration-tests/k8s/runner/main.go.
+/.kube/

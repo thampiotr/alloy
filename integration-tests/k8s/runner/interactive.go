@@ -11,13 +11,13 @@ import (
 	"github.com/charmbracelet/huh"
 )
 
-// runInteractive presents a small TUI form letting the developer pick the
+// configureInteractive presents a small TUI form letting the developer pick the
 // commonly tweaked runner options (reuse cluster, skip alloy image, filter by
 // shard or by packages) and writes the choices into cfg before tests run.
 //
 // Both "reuse cluster" and "skip alloy image" default to selected because
 // that's the typical dev-machine flow; the user can deselect them in the form.
-func runInteractive(cfg *config) error {
+func configureInteractive(cfg *config) error {
 	runOpts := []string{"reuse-cluster", "skip-alloy-build"}
 	filterMode := "all"
 	shard := cfg.shard

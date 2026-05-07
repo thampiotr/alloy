@@ -28,7 +28,7 @@ make integration-test-k8s-local-dev
 
 Opens a small TUI to pick the common run options before tests start:
 
-- multi-select: reuse kind cluster (default-on), skip Alloy image build (default-on), delete kind cluster before run (default-off; combine with reuse to start fresh and keep)
+- multi-select: reuse kind cluster (default-on), skip Alloy image build (default-on)
 - single-select: run all tests (default), filter by shard (CI-style `i/n`), or pick test packages
 - conditional: shard input or multi-select of packages
 
@@ -37,6 +37,20 @@ Use arrows to navigate, space to toggle, enter to confirm.
 Per-test Alloy chart options (controller type, replicas, stability level, etc.)
 are set via a helm values file in the test's `config/alloy-values.yaml` and
 passed to `deps.NewAlloy(deps.AlloyOptions{ValuesPath: ...})`.
+
+## Inspecting the running cluster
+
+The runner writes its kubeconfig to `integration-tests/k8s/.kube/kubeconfig`
+(gitignored). Pass it explicitly to your tools so you don't accidentally hit
+your real cluster:
+
+```sh
+kubectl --kubeconfig integration-tests/k8s/.kube/kubeconfig get pods -A
+k9s    --kubeconfig integration-tests/k8s/.kube/kubeconfig
+```
+
+Pair with `--reuse-cluster` to keep the cluster between runs and poke at it
+between iterations.
 
 If reuse mode leaves a broken cluster behind:
 
