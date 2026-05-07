@@ -1,10 +1,8 @@
 package deps
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -12,11 +10,11 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"strings"
 	"testing"
 	"time"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
+	"github.com/grafana/alloy/integration-tests/k8s/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,9 +23,6 @@ const (
 	intTestLabel  = "alloy_int_test"
 	timeout       = 5 * time.Minute
 	retryInterval = 500 * time.Millisecond
-	diagTimeout   = 20 * time.Second
-
-	kubeconfigEnv = "ALLOY_TESTS_KUBECONFIG"
 )
 
 type MetricsResponse struct {
@@ -105,8 +100,8 @@ func (m *Mimir) Cleanup() {
 		// Install never reached helm install; nothing to uninstall.
 		return
 	}
-	_ = step("uninstall mimir helm release", func() error {
-		return runCommand(
+	_ = util.Step("uninstall mimir helm release", func() error {
+		return harness.RunCommand(
 			"helm", "uninstall", mimirHelmRelease,
 			"--namespace", m.namespace,
 			"--ignore-not-found",
@@ -200,9 +195,9 @@ func (m *Mimir) endpoint(path string) string {
 func (m *Mimir) diagnosticsHook() func(context.Context) error {
 	namespace := m.namespace
 	return func(c context.Context) error {
-		hookCtx, cancel := context.WithTimeout(c, diagTimeout)
-		defer cancel()
-		return runDiagnosticCommands(hookCtx, [][]string{
+		// The harness already wraps each hook in a per-hook timeout (see
+		// harness.collectFailureDiagnostics), so we just forward c.
+		return harness.RunDiagnosticCommands(c, [][]string{
 			{"kubectl", "--namespace", namespace, "logs", "-l", "app.kubernetes.io/component=distributor", "--all-containers=true", "--tail", "200"},
 			{"kubectl", "--namespace", namespace, "logs", "-l", "app.kubernetes.io/component=alertmanager", "--all-containers=true", "--tail", "200"},
 		})
@@ -210,18 +205,18 @@ func (m *Mimir) diagnosticsHook() func(context.Context) error {
 }
 
 func installMimir(namespace string) error {
-	if err := step("helm repo add grafana", func() error {
-		return runCommand("helm", "repo", "add", "grafana", "https://grafana.github.io/helm-charts")
+	if err := util.Step("helm repo add grafana", func() error {
+		return harness.RunCommand("helm", "repo", "add", "grafana", "https://grafana.github.io/helm-charts")
 	}); err != nil {
 		return err
 	}
-	if err := step("helm repo update", func() error {
-		return runCommand("helm", "repo", "update")
+	if err := util.Step("helm repo update", func() error {
+		return harness.RunCommand("helm", "repo", "update")
 	}); err != nil {
 		return err
 	}
-	return step("install mimir", func() error {
-		return runCommand(
+	return util.Step("install mimir", func() error {
+		return harness.RunCommand(
 			"helm",
 			"upgrade",
 			"--install",
@@ -274,7 +269,7 @@ func startPortForward(namespace, localPort string) (func(), error) {
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Env = commandEnv()
+	cmd.Env = harness.CommandEnv()
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -312,71 +307,6 @@ func pickFreeLocalPort() (string, error) {
 		return "", err
 	}
 	return port, nil
-}
-
-// TODO: this is used by both alloy and mimir. Move it to util package.
-func runDiagnosticCommands(c context.Context, commands [][]string) error {
-	var errs []string
-	for _, args := range commands {
-		if len(args) == 0 {
-			continue
-		}
-		if err := runDiagnosticCommand(c, args[0], args[1:]...); err != nil {
-			errs = append(errs, err.Error())
-		}
-	}
-	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, "; "))
-	}
-	return nil
-}
-
-func runDiagnosticCommand(c context.Context, name string, args ...string) error {
-	cmd := exec.CommandContext(c, name, args...)
-	cmd.Env = commandEnv()
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &out
-
-	err := cmd.Run()
-	if out.Len() > 0 {
-		fmt.Printf("%s", out.String())
-	}
-	if err == nil {
-		return nil
-	}
-	if c.Err() != nil {
-		return fmt.Errorf("%s %v timed out: %w", name, args, c.Err())
-	}
-	return fmt.Errorf("%s %v failed: %w", name, args, err)
-}
-
-func runCommand(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = commandEnv()
-	return cmd.Run()
-}
-
-func commandEnv() []string {
-	env := os.Environ()
-	if kubeconfig := os.Getenv(kubeconfigEnv); kubeconfig != "" {
-		env = append(env, "KUBECONFIG="+kubeconfig)
-	}
-	return env
-}
-
-func step(name string, fn func() error) error {
-	start := time.Now()
-	fmt.Printf("[k8s-itest] %s...\n", name)
-	err := fn()
-	if err != nil {
-		fmt.Printf("[k8s-itest] failed %s time=%s err=%v\n", name, time.Since(start).Round(time.Millisecond), err)
-		return err
-	}
-	fmt.Printf("[k8s-itest] done %s time=%s\n", name, time.Since(start).Round(time.Millisecond))
-	return nil
 }
 
 func curl(c *assert.CollectT, targetURL string) string {

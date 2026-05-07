@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"maps"
-	"os"
-	"os/exec"
 	"slices"
 	"strings"
 
@@ -46,12 +44,7 @@ func (n *Namespace) Install(ctx *harness.TestContext) error {
 		return fmt.Errorf("namespace name is required")
 	}
 	manifest := buildNamespaceManifest(n.opts.Name, n.opts.Labels)
-	cmd := exec.Command("kubectl", "apply", "-f", "-")
-	cmd.Stdin = strings.NewReader(manifest)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = commandEnv()
-	if err := cmd.Run(); err != nil {
+	if err := harness.RunCommandStdin(manifest, "kubectl", "apply", "-f", "-"); err != nil {
 		return fmt.Errorf("apply namespace %q: %w", n.opts.Name, err)
 	}
 	ctx.AddDiagnosticHook("namespace "+n.opts.Name, n.diagnosticsHook())
@@ -62,7 +55,7 @@ func (n *Namespace) Cleanup() {
 	if n.opts.Name == "" {
 		return
 	}
-	_ = runCommand("kubectl", "delete", "namespace", n.opts.Name,
+	_ = harness.RunCommand("kubectl", "delete", "namespace", n.opts.Name,
 		"--ignore-not-found=true",
 		"--wait=true",
 		"--timeout=10m",
@@ -72,7 +65,7 @@ func (n *Namespace) Cleanup() {
 func (n *Namespace) diagnosticsHook() func(context.Context) error {
 	namespace := n.opts.Name
 	return func(c context.Context) error {
-		return runDiagnosticCommands(c, [][]string{
+		return harness.RunDiagnosticCommands(c, [][]string{
 			{"kubectl", "--namespace", namespace, "get", "pods", "-o", "wide"},
 			{"kubectl", "--namespace", namespace, "describe", "pods"},
 		})

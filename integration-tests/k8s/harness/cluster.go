@@ -36,7 +36,11 @@ func kubeconfigFromEnv() (string, error) {
 	return kubeconfig, nil
 }
 
-func commandEnv() []string {
+// CommandEnv returns the process environment with KUBECONFIG forced to the
+// managed test kubeconfig (when set). Pass it as cmd.Env when running a long
+// lived command directly with exec.Cmd; for one-shot invocations prefer the
+// RunCommand* helpers which apply this automatically.
+func CommandEnv() []string {
 	env := os.Environ()
 	if kubeconfig := os.Getenv(kubeconfigEnv); kubeconfig != "" {
 		env = append(env, "KUBECONFIG="+kubeconfig)

@@ -3,9 +3,7 @@ package deps
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
 	"github.com/grafana/alloy/integration-tests/k8s/util"
@@ -49,7 +47,7 @@ func (w *CustomWorkloads) Install(_ *harness.TestContext) error {
 	if err != nil {
 		return err
 	}
-	return runKubectlWithManifest(manifest, "apply", "-f", "-")
+	return harness.RunCommandStdin(manifest, "kubectl", "apply", "-f", "-")
 }
 
 func (w *CustomWorkloads) Cleanup() {
@@ -64,7 +62,7 @@ func (w *CustomWorkloads) Cleanup() {
 		fmt.Fprintf(os.Stderr, "[k8s-itest] custom-workloads cleanup render failed: %v\n", err)
 		return
 	}
-	_ = runKubectlWithManifest(manifest, "delete", "-f", "-",
+	_ = harness.RunCommandStdin(manifest, "kubectl", "delete", "-f", "-",
 		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
 	)
 }
@@ -79,13 +77,4 @@ func (w *CustomWorkloads) renderManifest() (string, error) {
 		return "", fmt.Errorf("workloads %s: %w", w.absPath, err)
 	}
 	return rendered, nil
-}
-
-func runKubectlWithManifest(manifest string, args ...string) error {
-	cmd := exec.Command("kubectl", args...)
-	cmd.Stdin = strings.NewReader(manifest)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = commandEnv()
-	return cmd.Run()
 }

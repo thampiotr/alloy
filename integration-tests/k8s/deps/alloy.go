@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
+	"github.com/grafana/alloy/integration-tests/k8s/util"
 )
 
 // alloyImageEnv is the env var the test runner sets to the Alloy image
@@ -98,13 +99,13 @@ func (a *Alloy) Install(ctx *harness.TestContext) error {
 			"--set", "alloy.configMap.key=config.alloy",
 		)
 	}
-	if err := runCommand(args[0], args[1:]...); err != nil {
+	if err := harness.RunCommand(args[0], args[1:]...); err != nil {
 		return err
 	}
 	a.installed = true
 
 	ctx.AddDiagnosticHook("alloy logs", func(c context.Context) error {
-		return runDiagnosticCommands(c, [][]string{
+		return harness.RunDiagnosticCommands(c, [][]string{
 			{"kubectl", "--namespace", a.opts.Namespace, "logs", "-l", "app.kubernetes.io/name=alloy", "--all-containers=true", "--tail", "200"},
 		})
 	})
@@ -115,8 +116,8 @@ func (a *Alloy) Cleanup() {
 	if !a.installed {
 		return
 	}
-	_ = step("uninstall alloy helm release", func() error {
-		return runCommand(
+	_ = util.Step("uninstall alloy helm release", func() error {
+		return harness.RunCommand(
 			"helm", "uninstall", a.opts.Release,
 			"--namespace", a.opts.Namespace,
 			"--ignore-not-found",
@@ -124,8 +125,8 @@ func (a *Alloy) Cleanup() {
 		)
 	})
 	if a.opts.ConfigPath != "" {
-		_ = step("delete alloy configmap", func() error {
-			return runCommand(
+		_ = util.Step("delete alloy configmap", func() error {
+			return harness.RunCommand(
 				"kubectl", "delete", "configmap", "alloy-config",
 				"--namespace", a.opts.Namespace,
 				"--ignore-not-found=true",
@@ -143,7 +144,7 @@ func createAlloyConfigMap(namespace, configPath string) error {
 	if err != nil {
 		return fmt.Errorf("resolve alloy config path: %w", err)
 	}
-	if err := runCommand("kubectl", "create", "configmap", "alloy-config",
+	if err := harness.RunCommand("kubectl", "create", "configmap", "alloy-config",
 		"--namespace", namespace,
 		"--from-file=config.alloy="+absConfigPath,
 	); err != nil {
