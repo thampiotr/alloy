@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"flag"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
@@ -173,13 +173,10 @@ func clusterExists() (bool, error) {
 		}
 		return false, err
 	}
-	scanner := bufio.NewScanner(strings.NewReader(string(out)))
-	for scanner.Scan() {
-		if strings.TrimSpace(scanner.Text()) == clusterName {
-			return true, nil
-		}
-	}
-	return false, scanner.Err()
+	// `kind get clusters` prints one cluster per line. strings.Fields handles
+	// whitespace and a trailing newline; exact-match avoids false positives
+	// against names that share a prefix with clusterName.
+	return slices.Contains(strings.Fields(string(out)), clusterName), nil
 }
 
 func configureEnvVariables(cfg config) error {
