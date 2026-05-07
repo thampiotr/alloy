@@ -33,9 +33,6 @@ func TestMimirAlerts(t *testing.T) {
 	})
 	defer kt.Cleanup(t)
 
-	// TODO: move into the alloy dep so tests don't have to know its labels.
-	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/name=alloy")
-
 	t.Run("Initial Config loaded", func(t *testing.T) {
 		mimir.CheckConfig(t, "./expected/expected_1.yml")
 	})

@@ -99,18 +99,12 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 	m.installed = true
 	ctx.AddDiagnosticHook("mimir logs", m.diagnosticsHook())
 
+	// Wait for the readiness probe so port-forward and HTTP queries below
+	// connect to a usable Service endpoint. Mimir's /ready returns 200 only
+	// once all in-process targets (distributor, ingester, alertmanager, ...)
+	// report ready.
 	if err := util.Step("wait for mimir pod ready", func() error {
-		// `kubectl wait --for=condition=ready` blocks until the readiness
-		// probe (HTTP /ready) passes. Mimir's /ready returns 200 only once
-		// all in-process targets (distributor, ingester, alertmanager, ...)
-		// are ready, so this also guarantees the API is usable before
-		// port-forward connects to a Service endpoint.
-		return harness.RunCommand("kubectl",
-			"--namespace", m.namespace,
-			"wait", "--for=condition=ready", "pod",
-			"-l", mimirSelector,
-			"--timeout=5m",
-		)
+		return harness.WaitForReady(m.namespace, mimirSelector)
 	}); err != nil {
 		return err
 	}

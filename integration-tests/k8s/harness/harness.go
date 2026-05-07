@@ -1,3 +1,7 @@
+// Package harness wires Go tests in integration-tests/k8s/tests/... to the
+// runner-managed kind cluster. Tests call Setup with a list of Dependencies
+// (deps.Namespace, deps.Mimir, ...); Setup installs them in order, returns a
+// *TestContext, and tests defer Cleanup which tears them down in reverse.
 package harness
 
 import (
@@ -8,8 +12,17 @@ import (
 	"testing"
 
 	"github.com/grafana/alloy/integration-tests/k8s/util"
-	"k8s.io/client-go/kubernetes"
 )
+
+// Dependency is implemented by every test fixture (deps.Namespace,
+// deps.Mimir, deps.Alloy, ...). Install must block until the dep is usable
+// (typically by calling WaitForReady) so callers can rely on "Install
+// returned" meaning "dep is ready". Cleanup is best-effort.
+type Dependency interface {
+	Name() string
+	Install(*TestContext) error
+	Cleanup()
+}
 
 type Options struct {
 	// Dependencies is a list of dependencies to install in order. They are
@@ -17,13 +30,12 @@ type Options struct {
 	Dependencies []Dependency
 }
 
-// TestContext is the runtime context for a test. It holds the kubernetes
-// client and registered diagnostic hooks. Namespace ownership lives in
-// dependencies (e.g. deps.Namespace), not here.
+// TestContext is the runtime context for a test. It tracks installed
+// dependencies and registered diagnostic hooks. Namespace ownership lives
+// in dependencies (e.g. deps.Namespace), not here.
 type TestContext struct {
 	name            string
 	pkgPath         string
-	client          *kubernetes.Clientset
 	dependencies    []Dependency
 	diagnosticHooks []diagnosticHook
 }
@@ -41,19 +53,13 @@ func Setup(t *testing.T, opts Options) *TestContext {
 		t.Skip("requires managed k8s test runner; use make integration-test-k8s")
 	}
 
-	kubeconfig, err := kubeconfigFromEnv()
-	if err != nil {
+	if _, err := kubeconfigFromEnv(); err != nil {
 		t.Fatalf("%v", err)
-	}
-	client, err := newClient(kubeconfig)
-	if err != nil {
-		t.Fatalf("create kubernetes client: %v", err)
 	}
 
 	ctx := &TestContext{
 		name:    t.Name(),
 		pkgPath: derivePkgPath(callerFile),
-		client:  client,
 	}
 
 	for _, dep := range opts.Dependencies {

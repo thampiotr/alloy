@@ -54,8 +54,8 @@ func (p *PromGen) Install(ctx *harness.TestContext) error {
 		return err
 	}
 	p.installed = true
-	return util.Step("wait for prom-gen pod running", func() error {
-		return ctx.AwaitAllPodsRunning(p.opts.Namespace, promGenSelector)
+	return util.Step("wait for prom-gen pod ready", func() error {
+		return harness.WaitForReady(p.opts.Namespace, promGenSelector)
 	})
 }
 

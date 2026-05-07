@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
+	"regexp"
 	"strings"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
@@ -35,7 +35,6 @@ type config struct {
 	skipAlloyBuild bool
 	shard          string
 	packages       []string
-	runRegex       string
 	interactive    bool
 }
 
@@ -113,7 +112,6 @@ func parseFlags() (config, error) {
 	flag.BoolVar(&cfg.skipAlloyBuild, "skip-alloy-build", false, "Skip running make alloy-image; the image must already exist locally or in the kind cluster")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	flag.StringVar(&pkgFlag, "package", "", "Restrict tests to one package path or pattern (default: "+defaultTestPackages+")")
-	flag.StringVar(&cfg.runRegex, "run", "", "Forward -run regex to `go test` (e.g. --run TestMimirAlerts to rerun a single test)")
 	flag.StringVar(&cfg.alloyImage, "alloy-image", "grafana/alloy:latest", "Alloy image (repo:tag) used by tests; must exist locally or in the kind cluster")
 	flag.BoolVar(&cfg.interactive, "interactive", false, "Pick run options (reuse-cluster, skip-alloy-build, shard/packages) via an interactive menu before running")
 	flag.Usage = func() {
@@ -155,7 +153,7 @@ func ensureCluster(cfg config) error {
 			util.Logf("reusing existing cluster %s", clusterName)
 			return nil
 		}
-		util.Logf("cluster already exists, deleting stale cluster first")
+		util.Logf("cluster '%s' already exists, deleting stale cluster first", clusterName)
 		if err := harness.RunCommand("kind", "delete", "cluster", "--name", clusterName); err != nil {
 			return err
 		}
@@ -173,15 +171,11 @@ func clusterExists() (bool, error) {
 		}
 		return false, err
 	}
-	// `kind get clusters` prints one cluster per line. strings.Fields handles
-	// whitespace and a trailing newline; exact-match avoids false positives
-	// against names that share a prefix with clusterName.
-	return slices.Contains(strings.Fields(string(out)), clusterName), nil
+	// Match the cluster name on its own line.
+	return regexp.MatchString(`(?m)^`+clusterName+`$`, string(out))
 }
 
 func configureEnvVariables(cfg config) error {
-	// 0o600: kubeconfig holds cluster credentials; kubectl emits an
-	// "insecure permissions" warning if it's readable by group/other.
 	file, err := os.OpenFile(cfg.kubeconfig, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
 	if err != nil {
 		return fmt.Errorf("create kubeconfig: %w", err)
@@ -208,8 +202,7 @@ func configureEnvVariables(cfg config) error {
 }
 
 // loadAlloyImage loads the Alloy image (the artifact under test) into the kind
-// cluster. Test-specific images (prom-gen, blackbox-exporter, etc.) are the
-// responsibility of their respective dependencies in deps/.
+// cluster.
 func loadAlloyImage(cfg config) error {
 	return harness.RunCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
@@ -224,9 +217,6 @@ func runGoTests(cfg config) error {
 		patterns = []string{defaultTestPackages}
 	}
 	args := []string{"test", "-v", "-timeout", "30m"}
-	if cfg.runRegex != "" {
-		args = append(args, "-run", cfg.runRegex)
-	}
 	args = append(args, patterns...)
 	if cfg.shard != "" {
 		args = append(args, "-args", "-shard="+cfg.shard)

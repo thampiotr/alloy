@@ -29,9 +29,7 @@ func collectFailureDiagnostics(ctx *TestContext) {
 		util.Logf("diagnostics hook done name=%q time=%s", hook.name, time.Since(start).Round(time.Millisecond))
 	}
 	if ctx.pkgPath != "" {
-		util.Logf("repro: make integration-test-k8s RUN_ARGS='--package ./%s --run %s'", ctx.pkgPath, ctx.name)
-	} else {
-		util.Logf("repro: make integration-test-k8s RUN_ARGS='--run %s'", ctx.name)
+		util.Logf("repro: make integration-test-k8s RUN_ARGS='--package ./%s'", ctx.pkgPath)
 	}
 	util.Logf("kubeconfig: %s", os.Getenv(kubeconfigEnv))
 }

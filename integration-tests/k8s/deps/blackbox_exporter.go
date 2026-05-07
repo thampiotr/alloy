@@ -51,8 +51,8 @@ func (b *BlackboxExporter) Install(ctx *harness.TestContext) error {
 		return err
 	}
 	b.installed = true
-	return util.Step("wait for blackbox-exporter pod running", func() error {
-		return ctx.AwaitAllPodsRunning(b.opts.Namespace, blackboxExporterSelector)
+	return util.Step("wait for blackbox-exporter pod ready", func() error {
+		return harness.WaitForReady(b.opts.Namespace, blackboxExporterSelector)
 	})
 }
 

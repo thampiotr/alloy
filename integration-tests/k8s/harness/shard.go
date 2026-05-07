@@ -16,23 +16,30 @@ type shardConfig struct {
 	total int
 }
 
-func parseShard() (shardConfig, error) {
-	if *shardFlag == "" {
-		return shardConfig{}, nil
-	}
+// ValidateShard returns nil if s parses as a valid "i/n" expression (n > 0
+// and 0 <= i < n), or a descriptive error otherwise. The empty string is
+// treated as invalid here; callers that want to allow "no sharding" should
+// short-circuit before calling.
+//
+// This is the single source of truth for the i/n grammar, used by the test
+// harness's --shard flag and by the runner's interactive form validation.
+func ValidateShard(s string) error {
+	_, err := parseShardString(s)
+	return err
+}
 
-	parts := strings.Split(*shardFlag, "/")
+func parseShardString(s string) (shardConfig, error) {
+	parts := strings.Split(s, "/")
 	if len(parts) != 2 {
-		return shardConfig{}, fmt.Errorf("invalid shard %q, expected i/n", *shardFlag)
+		return shardConfig{}, fmt.Errorf("invalid shard %q, expected i/n", s)
 	}
-
 	index, err := strconv.Atoi(parts[0])
 	if err != nil {
-		return shardConfig{}, fmt.Errorf("invalid shard index in %q: %w", *shardFlag, err)
+		return shardConfig{}, fmt.Errorf("invalid shard index in %q: %w", s, err)
 	}
 	total, err := strconv.Atoi(parts[1])
 	if err != nil {
-		return shardConfig{}, fmt.Errorf("invalid shard total in %q: %w", *shardFlag, err)
+		return shardConfig{}, fmt.Errorf("invalid shard total in %q: %w", s, err)
 	}
 	if total <= 0 {
 		return shardConfig{}, fmt.Errorf("invalid shard total %d", total)
@@ -40,8 +47,14 @@ func parseShard() (shardConfig, error) {
 	if index < 0 || index >= total {
 		return shardConfig{}, fmt.Errorf("invalid shard index %d for total %d", index, total)
 	}
-
 	return shardConfig{index: index, total: total}, nil
+}
+
+func parseShard() (shardConfig, error) {
+	if *shardFlag == "" {
+		return shardConfig{}, nil
+	}
+	return parseShardString(*shardFlag)
 }
 
 func (s shardConfig) shouldRun(key string) bool {

@@ -36,8 +36,6 @@ func TestPrometheusOperator(t *testing.T) {
 	})
 	defer kt.Cleanup(t)
 
-	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/name=alloy")
-
 	t.Run("ServiceMonitors", func(t *testing.T) {
 		// Check that Mimir received metrics from the ServiceMonitor target.
 		// All metrics are prefixed with test_servicemonitors_ via relabeling.

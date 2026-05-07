@@ -6,9 +6,10 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
-	"strings"
 
 	"github.com/charmbracelet/huh"
+
+	"github.com/grafana/alloy/integration-tests/k8s/harness"
 )
 
 // configureInteractive presents a small TUI form letting the developer pick the
@@ -38,7 +39,6 @@ func configureInteractive(cfg *config) error {
 		huh.NewGroup(
 			huh.NewMultiSelect[string]().
 				Title("Run options").
-				Description("Space toggles, Enter confirms.").
 				Options(
 					huh.NewOption("Reuse kind cluster", "reuse-cluster").Selected(true),
 					huh.NewOption("Skip Alloy image build", "skip-alloy-build").Selected(true),
@@ -58,9 +58,9 @@ func configureInteractive(cfg *config) error {
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Shard (i/n)").
-				Description("Index/total. Pick the matching CI shard, e.g. 0/2 or 1/2.").
+				Description("Pick the shard of the tests you want to run in (index/total) format. For example, 0/2 or 1/2.").
 				Value(&shard).
-				Validate(validateShard),
+				Validate(harness.ValidateShard),
 		).WithHideFunc(func() bool { return filterMode != "shard" }),
 		huh.NewGroup(
 			huh.NewMultiSelect[string]().
@@ -119,12 +119,4 @@ func buildPkgOptions(pkgs []string) []huh.Option[string] {
 		opts = append(opts, huh.NewOption(filepath.Base(p), p))
 	}
 	return opts
-}
-
-func validateShard(s string) error {
-	parts := strings.Split(s, "/")
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return fmt.Errorf("expected i/n, got %q", s)
-	}
-	return nil
 }
