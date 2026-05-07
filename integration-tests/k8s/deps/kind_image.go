@@ -2,6 +2,7 @@ package deps
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
 	"github.com/grafana/alloy/integration-tests/k8s/util"
@@ -45,6 +46,11 @@ func ensureLocalImage(image string, build bool, dockerfile, buildContext string)
 		if dockerfile == "" || buildContext == "" {
 			return fmt.Errorf("build=true requires dockerfile and buildContext for %q", image)
 		}
+		// `go test` sets the test binary's CWD to the test package directory,
+		// not the repo root, so relative paths must be resolved against the
+		// repo root that the runner exported.
+		dockerfile = resolveFromRepoRoot(dockerfile)
+		buildContext = resolveFromRepoRoot(buildContext)
 		return util.Step(fmt.Sprintf("docker build %s", image), func() error {
 			return harness.RunCommand("docker", "build", "-t", image, "-f", dockerfile, buildContext)
 		})
@@ -52,4 +58,18 @@ func ensureLocalImage(image string, build bool, dockerfile, buildContext string)
 	return util.Step(fmt.Sprintf("docker pull %s", image), func() error {
 		return harness.RunCommand("docker", "pull", image)
 	})
+}
+
+// resolveFromRepoRoot turns a path that's relative to the repo root into an
+// absolute path. Returns p unchanged if it's already absolute or the runner
+// did not export ALLOY_TESTS_REPO_ROOT.
+func resolveFromRepoRoot(p string) string {
+	if filepath.IsAbs(p) {
+		return p
+	}
+	root := harness.RepoRoot()
+	if root == "" {
+		return p
+	}
+	return filepath.Join(root, p)
 }

@@ -20,6 +20,7 @@ const (
 	managedEnv         = "ALLOY_TESTS_MANAGED_CLUSTER"
 	alloyImageEnv      = "ALLOY_TESTS_IMAGE"
 	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
+	repoRootEnv        = "ALLOY_TESTS_REPO_ROOT"
 )
 
 // defaultTestPackages is the fallback `go test` target when neither the
@@ -202,7 +203,10 @@ func configureEnvVariables(cfg config) error {
 	if err := os.Setenv(alloyImageEnv, cfg.alloyImage); err != nil {
 		return err
 	}
-	return os.Setenv(kindClusterNameEnv, clusterName)
+	if err := os.Setenv(kindClusterNameEnv, clusterName); err != nil {
+		return err
+	}
+	return os.Setenv(repoRootEnv, cfg.repoRoot)
 }
 
 // loadAlloyImage loads the Alloy image (the artifact under test) into the kind
