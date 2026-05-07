@@ -19,10 +19,10 @@ import (
 // that's the typical dev-machine flow; the user can deselect them in the form.
 func runInteractive(cfg *config) error {
 	runOpts := []string{"reuse-cluster", "skip-alloy-image"}
-	filterMode := "shard"
+	filterMode := "all"
 	shard := cfg.shard
 	if shard == "" {
-		shard = "0/1"
+		shard = "0/2"
 	}
 
 	pkgs, err := discoverTestPackages(cfg.repoRoot)
@@ -42,14 +42,16 @@ func runInteractive(cfg *config) error {
 				Options(
 					huh.NewOption("Reuse kind cluster", "reuse-cluster").Selected(true),
 					huh.NewOption("Skip Alloy image build", "skip-alloy-image").Selected(true),
+					huh.NewOption("Delete kind cluster before run", "delete-cluster"),
 				).
 				Value(&runOpts),
 		),
 		huh.NewGroup(
 			huh.NewSelect[string]().
-				Title("How do you want to filter tests?").
+				Title("Which tests do you want to run?").
 				Options(
-					huh.NewOption("Shard like CI (e.g. 0/2)", "shard"),
+					huh.NewOption("All tests, all packages", "all"),
+					huh.NewOption("A shard like CI (e.g. 0/2)", "shard"),
 					huh.NewOption("Pick test packages", "packages"),
 				).
 				Value(&filterMode),
@@ -57,7 +59,7 @@ func runInteractive(cfg *config) error {
 		huh.NewGroup(
 			huh.NewInput().
 				Title("Shard (i/n)").
-				Description("Index/total. 0/1 runs every package.").
+				Description("Index/total. Pick the matching CI shard, e.g. 0/2 or 1/2.").
 				Value(&shard).
 				Validate(validateShard),
 		).WithHideFunc(func() bool { return filterMode != "shard" }),
@@ -80,18 +82,17 @@ func runInteractive(cfg *config) error {
 
 	cfg.reuseCluster = slices.Contains(runOpts, "reuse-cluster")
 	cfg.skipAlloy = slices.Contains(runOpts, "skip-alloy-image")
+	cfg.deleteCluster = slices.Contains(runOpts, "delete-cluster")
 	switch filterMode {
-	case "shard":
-		// "0/1" is the no-op that runs everything; treat it as no shard so we
-		// don't drag the shard tag through diagnostics output.
-		if shard == "0/1" {
-			cfg.shard = ""
-		} else {
-			cfg.shard = shard
-		}
-	case "packages":
-		cfg.packages = pickedPkgs
+	case "all":
 		cfg.shard = ""
+		cfg.packages = nil
+	case "shard":
+		cfg.shard = shard
+		cfg.packages = nil
+	case "packages":
+		cfg.shard = ""
+		cfg.packages = pickedPkgs
 	}
 	return nil
 }

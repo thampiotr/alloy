@@ -10,26 +10,29 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/grafana/alloy/integration-tests/k8s/util"
 )
 
 const (
-	clusterName   = "alloy-k8s-integration"
-	kubeconfigEnv = "ALLOY_TESTS_KUBECONFIG"
-	managedEnv    = "ALLOY_TESTS_MANAGED_CLUSTER"
-	alloyImageEnv = "ALLOY_TESTS_IMAGE"
+	clusterName        = "alloy-k8s-integration"
+	kubeconfigEnv      = "ALLOY_TESTS_KUBECONFIG"
+	managedEnv         = "ALLOY_TESTS_MANAGED_CLUSTER"
+	alloyImageEnv      = "ALLOY_TESTS_IMAGE"
+	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
 )
 
 type config struct {
 	repoRoot      string
 	kubeconfig    string
 	alloyImage    string
+	deleteCluster bool
 	reuseCluster  bool
 	skipAlloy     bool
 	shard         string
 	packageScope  string
 	packages      []string
 	runRegex      string
-	promOpVersion string
 	interactive   bool
 }
 
@@ -60,49 +63,34 @@ func main() {
 		os.Exit(1)
 	}
 
-	cleanupNeeded := true
 	defer func() {
-		if !cleanupNeeded {
-			return
-		}
 		if cfg.reuseCluster {
 			logf("reuse mode enabled; keeping cluster %s", clusterName)
 			return
 		}
-		logf("deleting kind cluster %s", clusterName)
-		_ = runCommand("kind", "delete", "cluster", "--name", clusterName)
+		_ = util.Step("delete kind cluster (post-test)", func() error {
+			return runCommand("kind", "delete", "cluster", "--name", clusterName)
+		})
 	}()
 
-	if err := maybeBuildAlloyImage(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	steps := []struct {
+		name string
+		fn   func() error
+	}{
+		{"build alloy image", func() error { return maybeBuildAlloyImage(cfg) }},
+		{"delete kind cluster (preflight)", func() error { return maybeDeleteCluster(cfg) }},
+		{"ensure kind cluster", func() error { return ensureCluster(cfg) }},
+		{"configure kubeconfig env", func() error { return configureKubeEnv(cfg) }},
+		{"clean reused cluster namespaces", func() error { return cleanReusedClusterNamespaces(cfg) }},
+		{"load alloy image into kind", func() error { return loadImages(cfg) }},
+		{"run go tests", func() error { return runGoTests(cfg) }},
 	}
-	if err := ensureCluster(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	for _, s := range steps {
+		if err := util.Step(s.name, s.fn); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
-	if err := configureKubeEnv(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	if err := cleanReusedClusterNamespaces(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	if err := loadImages(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	if err := installPrometheusOperator(cfg.promOpVersion); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-	if err := runGoTests(cfg); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-
-	cleanupNeeded = true
 }
 
 func parseFlags() (config, error) {
@@ -116,16 +104,16 @@ func parseFlags() (config, error) {
 	kubeconfigPath := filepath.Join(repoRoot, "integration-tests", "k8s", ".tmp", "kubeconfig")
 
 	cfg := config{
-		repoRoot:      repoRoot,
-		kubeconfig:    kubeconfigPath,
-		packageScope:  "./integration-tests/k8s/tests/...",
-		promOpVersion: getEnv("PROM_OPERATOR_VERSION", "v0.81.0"),
+		repoRoot:     repoRoot,
+		kubeconfig:   kubeconfigPath,
+		packageScope: "./integration-tests/k8s/tests/...",
 	}
 
 	// With --reuse-cluster, the runner asks the user (interactively) to confirm deletion of any
 	// non-system namespaces left over from a previous run before tests start. This keeps repeated
 	// local runs safe while letting you skip the kind cluster recreation cost.
 	flag.BoolVar(&cfg.reuseCluster, "reuse-cluster", false, "Reuse fixed kind cluster and keep it after test run")
+	flag.BoolVar(&cfg.deleteCluster, "delete-cluster", false, "Delete the kind cluster (if any) before the run; useful to force a clean slate, can be combined with --reuse-cluster")
 	flag.BoolVar(&cfg.skipAlloy, "skip-alloy-image", false, "Do not run make alloy-image (requires image to exist)")
 	flag.StringVar(&cfg.shard, "shard", "", "Split test packages across shards (e.g., 0/2)")
 	flag.StringVar(&cfg.packageScope, "package", cfg.packageScope, "Run one package path")
@@ -152,11 +140,28 @@ func requireCommands(commands ...string) error {
 
 func maybeBuildAlloyImage(cfg config) error {
 	if !cfg.skipAlloy {
-		logf("building alloy image")
 		return runCommand("make", "alloy-image")
 	}
-	logf("skipping alloy image build")
+	logf("--skip-alloy-image set; expecting %q already in local docker daemon", cfg.alloyImage)
 	return runCommandQuiet("docker", "image", "inspect", cfg.alloyImage)
+}
+
+// maybeDeleteCluster deletes the managed kind cluster up-front when
+// --delete-cluster is set. Combine with --reuse-cluster to get "fresh start
+// now, keep across subsequent local iterations". Tolerates a missing cluster.
+func maybeDeleteCluster(cfg config) error {
+	if !cfg.deleteCluster {
+		return nil
+	}
+	exists, err := clusterExists()
+	if err != nil {
+		return err
+	}
+	if !exists {
+		logf("no kind cluster %q to delete", clusterName)
+		return nil
+	}
+	return runCommand("kind", "delete", "cluster", "--name", clusterName)
 }
 
 func ensureCluster(cfg config) error {
@@ -173,9 +178,7 @@ func ensureCluster(cfg config) error {
 		if err := runCommand("kind", "delete", "cluster", "--name", clusterName); err != nil {
 			return err
 		}
-		return runCommand("kind", "create", "cluster", "--name", clusterName)
 	}
-	logf("creating kind cluster %s", clusterName)
 	return runCommand("kind", "create", "cluster", "--name", clusterName)
 }
 
@@ -289,54 +292,75 @@ func configureKubeEnv(cfg config) error {
 	if err := os.Setenv(kubeconfigEnv, cfg.kubeconfig); err != nil {
 		return err
 	}
-	return os.Setenv(alloyImageEnv, cfg.alloyImage)
+	if err := os.Setenv(alloyImageEnv, cfg.alloyImage); err != nil {
+		return err
+	}
+	return os.Setenv(kindClusterNameEnv, clusterName)
 }
 
+// loadImages loads the Alloy image (the artifact under test) into the kind
+// cluster. Test-specific images (prom-gen, blackbox-exporter, etc.) are the
+// responsibility of their respective dependencies in deps/.
 func loadImages(cfg config) error {
-	logf("loading required images to kind")
-	if err := runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName); err != nil {
-		return err
-	}
-	if err := runCommand("docker", "build", "-t", "prom-gen:latest", "-f", filepath.Join(cfg.repoRoot, "integration-tests/docker/configs/prom-gen/Dockerfile"), cfg.repoRoot); err != nil {
-		return err
-	}
-	if err := runCommand("docker", "pull", "prom/blackbox-exporter:v0.25.0"); err != nil {
-		return err
-	}
-	if err := runCommand("kind", "load", "docker-image", "prom-gen:latest", "--name", clusterName); err != nil {
-		return err
-	}
-	return runCommand("kind", "load", "docker-image", "prom/blackbox-exporter:v0.25.0", "--name", clusterName)
+	return runCommand("kind", "load", "docker-image", cfg.alloyImage, "--name", clusterName)
 }
 
-func installPrometheusOperator(version string) error {
-	logf("installing prometheus operator bundle %s", version)
-	url := fmt.Sprintf("https://github.com/prometheus-operator/prometheus-operator/releases/download/%s/bundle.yaml", version)
-	return runCommand("kubectl", "apply", "--kubeconfig", os.Getenv(kubeconfigEnv), "--server-side", "--validate=false", "-f", url)
-}
-
+// runGoTests resolves the configured package list (or expands the wildcard
+// scope via `go list`) into individual packages and runs `go test -v` per
+// package. Running one package per invocation is intentional: when `go test`
+// is given multiple packages, it buffers each package's `-v` output until
+// that package finishes, which hides progress and makes hangs invisible.
+// Single-package invocations stream test logs in real time.
 func runGoTests(cfg config) error {
 	pkgs := cfg.packages
 	if len(pkgs) == 0 {
-		pkgs = []string{cfg.packageScope}
+		expanded, err := expandPackages(cfg.packageScope)
+		if err != nil {
+			return err
+		}
+		pkgs = expanded
+	}
+	if len(pkgs) == 0 {
+		return fmt.Errorf("no test packages matched %q", cfg.packageScope)
 	}
 	for _, pkg := range pkgs {
-		args := []string{"test", "-v", `-tags=gore2regex`, "-timeout", "30m"}
+		args := []string{"test", "-v", "-timeout", "30m"}
 		if cfg.runRegex != "" {
 			args = append(args, "-run", cfg.runRegex)
 		}
 		args = append(args, pkg)
+		stepName := "go test " + pkg
 		if cfg.shard != "" {
-			logf("running shard %s on %s", cfg.shard, pkg)
 			args = append(args, "-args", "-shard="+cfg.shard)
-		} else {
-			logf("running go test %s", pkg)
+			stepName += " (shard " + cfg.shard + ")"
 		}
-		if err := runCommand("go", args...); err != nil {
+		if err := util.Step(stepName, func() error { return runCommand("go", args...) }); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// expandPackages resolves a Go package pattern (which may include `...`) into
+// the matched import paths. We use `go list` rather than walking the
+// filesystem so build tags and module boundaries are honored exactly the way
+// `go test` would have done.
+func expandPackages(pattern string) ([]string, error) {
+	cmd := exec.Command("go", "list", pattern)
+	cmd.Env = os.Environ()
+	out, err := cmd.Output()
+	if err != nil {
+		var ee *exec.ExitError
+		if errors.As(err, &ee) {
+			return nil, fmt.Errorf("go list %s: %s", pattern, strings.TrimSpace(string(ee.Stderr)))
+		}
+		return nil, fmt.Errorf("go list %s: %w", pattern, err)
+	}
+	var pkgs []string
+	for _, p := range strings.Fields(string(out)) {
+		pkgs = append(pkgs, p)
+	}
+	return pkgs, nil
 }
 
 func runCommand(name string, args ...string) error {
@@ -358,12 +382,4 @@ func runCommandQuiet(name string, args ...string) error {
 
 func logf(format string, args ...any) {
 	fmt.Printf("[k8s-itest] "+format+"\n", args...)
-}
-
-func getEnv(name, fallback string) string {
-	v := os.Getenv(name)
-	if v == "" {
-		return fallback
-	}
-	return v
 }

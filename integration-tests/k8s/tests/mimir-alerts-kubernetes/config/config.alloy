@@ -4,7 +4,7 @@ remote.kubernetes.configmap "default" {
 }
 
 mimir.alerts.kubernetes "default" {
-  address       = "http://mimir-nginx:80"
+  address       = "http://mimir:9009"
   sync_interval = "5s"
   global_config = remote.kubernetes.configmap.default.data["glbl"]
   template_files = {

@@ -13,10 +13,8 @@ func TestMimirAlerts(t *testing.T) {
 		Name:   "test-mimir-alerts-kubernetes",
 		Labels: map[string]string{"alloy-integration-test": "true"},
 	})
-	mimir := deps.NewMimir(deps.MimirOptions{
-		Namespace:  ns.Name(),
-		ValuesPath: "./config/mimir-values.yaml",
-	})
+	promOp := deps.NewPrometheusOperator(deps.PrometheusOperatorOptions{})
+	mimir := deps.NewMimir(deps.MimirOptions{Namespace: ns.Name()})
 	alloy := deps.NewAlloy(deps.AlloyOptions{
 		Namespace:  ns.Name(),
 		Release:    "alloy-mimir-alerts-kubernetes",
@@ -28,13 +26,15 @@ func TestMimirAlerts(t *testing.T) {
 		Vars: map[string]string{"NAMESPACE": ns.Name()},
 	})
 	kt := harness.Setup(t, harness.Options{
-		Dependencies: []harness.Dependency{ns, extraManifests, mimir, alloy},
+		// promOp installs the AlertmanagerConfig CRD that extraManifests
+		// applies; mimir waits for its own pod readiness so alloy can
+		// reach it as soon as Install returns.
+		Dependencies: []harness.Dependency{ns, promOp, extraManifests, mimir, alloy},
 	})
 	defer kt.Cleanup(t)
 
-	// TODO: waiting for them to be part of their dep struct as method?
+	// TODO: move into the alloy dep so tests don't have to know its labels.
 	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/name=alloy")
-	kt.WaitForAllPodsRunning(t, ns.Name(), "app.kubernetes.io/component=alertmanager")
 
 	t.Run("Initial Config loaded", func(t *testing.T) {
 		mimir.CheckConfig(t, "./expected/expected_1.yml")

@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,6 +17,17 @@ func RunCommand(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Env = CommandEnv()
+	return cmd.Run()
+}
+
+// RunCommandQuiet runs name with args and discards stdout/stderr. Use it for
+// idempotency checks (e.g. `docker image inspect`) where the success/failure
+// of the command is the signal and the output would only add noise.
+func RunCommandQuiet(name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = io.Discard
 	cmd.Env = CommandEnv()
 	return cmd.Run()
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/grafana/alloy/integration-tests/k8s/util"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -56,7 +57,8 @@ func Setup(t *testing.T, opts Options) *TestContext {
 	}
 
 	for _, dep := range opts.Dependencies {
-		if err := dep.Install(ctx); err != nil {
+		err := util.Step("install dep "+dep.Name(), func() error { return dep.Install(ctx) })
+		if err != nil {
 			t.Fatalf("install dependency %q: %v", dep.Name(), err)
 		}
 		ctx.dependencies = append(ctx.dependencies, dep)
@@ -88,7 +90,11 @@ func (ctx *TestContext) Cleanup(t *testing.T) {
 		collectFailureDiagnostics(ctx)
 	}
 	for i := len(ctx.dependencies) - 1; i >= 0; i-- {
-		ctx.dependencies[i].Cleanup()
+		dep := ctx.dependencies[i]
+		_ = util.Step("cleanup dep "+dep.Name(), func() error {
+			dep.Cleanup()
+			return nil
+		})
 	}
 }
 

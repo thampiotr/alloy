@@ -2,6 +2,7 @@ package deps
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -24,7 +24,15 @@ const (
 	intTestLabel  = "alloy_int_test"
 	timeout       = 5 * time.Minute
 	retryInterval = 500 * time.Millisecond
+
+	// mimirSelector matches the single Mimir pod created from manifests/mimir.yaml.
+	mimirSelector = "app=mimir"
+	// mimirHTTPPort is the http_listen_port configured in manifests/mimir.yaml.
+	mimirHTTPPort = "9009"
 )
+
+//go:embed manifests/mimir.yaml
+var mimirManifest string
 
 type MetricsResponse struct {
 	Status string `json:"status"`
@@ -49,11 +57,14 @@ type ExpectedMetadata struct {
 	Help string
 }
 
-// mimirHelmRelease is the helm release name used by Mimir.Install. Kept as a
-// constant so Cleanup can uninstall the release without depending on Install
-// having succeeded fully.
-const mimirHelmRelease = "mimir"
-
+// Mimir runs a single-pod Mimir in monolithic mode (target=all,alertmanager)
+// with filesystem storage and inmemory rings. This is intentionally not
+// production-shaped; it's the smallest Mimir we can stand up to exercise
+// Alloy's remote_write and alertmanager-config push paths in tests.
+//
+// In-cluster URL: http://mimir:9009 (Service name "mimir", port 9009).
+// Tests should point Alloy's `prometheus.remote_write` /
+// `mimir.alerts.kubernetes` at that endpoint.
 type Mimir struct {
 	opts            MimirOptions
 	namespace       string
@@ -65,30 +76,44 @@ type Mimir struct {
 type MimirOptions struct {
 	// Namespace to install Mimir into. Required.
 	Namespace string
-	// ValuesPath is an optional path to a helm values file applied to the
-	// mimir-distributed chart. Use it to set chart options like component
-	// counts, enabled flags, resource sizing, etc.
-	ValuesPath string
 }
 
 func NewMimir(opts MimirOptions) *Mimir {
 	return &Mimir{opts: opts, namespace: opts.Namespace}
 }
 
-func (m *Mimir) Name() string {
-	return "mimir"
-}
+func (m *Mimir) Name() string { return "mimir" }
 
 func (m *Mimir) Install(ctx *harness.TestContext) error {
 	if m.namespace == "" {
 		return fmt.Errorf("mimir namespace is required")
 	}
 
-	if err := installMimir(m.namespace, m.opts.ValuesPath); err != nil {
+	if err := util.Step("apply mimir manifest", func() error {
+		return harness.RunCommandStdin(mimirManifest,
+			"kubectl", "apply", "--namespace", m.namespace, "-f", "-",
+		)
+	}); err != nil {
 		return err
 	}
 	m.installed = true
 	ctx.AddDiagnosticHook("mimir logs", m.diagnosticsHook())
+
+	if err := util.Step("wait for mimir pod ready", func() error {
+		// `kubectl wait --for=condition=ready` blocks until the readiness
+		// probe (HTTP /ready) passes. Mimir's /ready returns 200 only once
+		// all in-process targets (distributor, ingester, alertmanager, ...)
+		// are ready, so this also guarantees the API is usable before
+		// port-forward connects to a Service endpoint.
+		return harness.RunCommand("kubectl",
+			"--namespace", m.namespace,
+			"wait", "--for=condition=ready", "pod",
+			"-l", mimirSelector,
+			"--timeout=5m",
+		)
+	}); err != nil {
+		return err
+	}
 
 	localPort, stop, err := startPortForwardWithRetries(m.namespace, 5)
 	if err != nil {
@@ -104,17 +129,12 @@ func (m *Mimir) Cleanup() {
 		m.stopPortForward()
 	}
 	if !m.installed || m.namespace == "" {
-		// Install never reached helm install; nothing to uninstall.
 		return
 	}
-	_ = util.Step("uninstall mimir helm release", func() error {
-		return harness.RunCommand(
-			"helm", "uninstall", mimirHelmRelease,
-			"--namespace", m.namespace,
-			"--ignore-not-found",
-			"--wait",
-		)
-	})
+	_ = harness.RunCommandStdin(mimirManifest,
+		"kubectl", "delete", "--namespace", m.namespace, "-f", "-",
+		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
+	)
 }
 
 func (m *Mimir) QueryMetrics(t *testing.T, alloyIntTest string, expectedMetrics []string) {
@@ -202,44 +222,13 @@ func (m *Mimir) endpoint(path string) string {
 func (m *Mimir) diagnosticsHook() func(context.Context) error {
 	namespace := m.namespace
 	return func(c context.Context) error {
-		// The harness already wraps each hook in a per-hook timeout (see
-		// harness.collectFailureDiagnostics), so we just forward c.
+		// Single Mimir pod in monolithic mode -> one selector covers
+		// distributor, ingester and alertmanager logs.
 		return harness.RunDiagnosticCommands(c, [][]string{
-			{"kubectl", "--namespace", namespace, "logs", "-l", "app.kubernetes.io/component=distributor", "--all-containers=true", "--tail", "200"},
-			{"kubectl", "--namespace", namespace, "logs", "-l", "app.kubernetes.io/component=alertmanager", "--all-containers=true", "--tail", "200"},
+			{"kubectl", "--namespace", namespace, "logs", "-l", mimirSelector, "--all-containers=true", "--tail", "500"},
+			{"kubectl", "--namespace", namespace, "describe", "pod", "-l", mimirSelector},
 		})
 	}
-}
-
-func installMimir(namespace, valuesPath string) error {
-	if err := util.Step("helm repo add grafana", func() error {
-		return harness.RunCommand("helm", "repo", "add", "grafana", "https://grafana.github.io/helm-charts")
-	}); err != nil {
-		return err
-	}
-	if err := util.Step("helm repo update", func() error {
-		return harness.RunCommand("helm", "repo", "update")
-	}); err != nil {
-		return err
-	}
-	return util.Step("install mimir", func() error {
-		args := []string{
-			"helm", "upgrade", "--install",
-			mimirHelmRelease,
-			"grafana/mimir-distributed",
-			"--version", "5.8.0",
-			"--namespace", namespace,
-			"--wait",
-		}
-		if valuesPath != "" {
-			absValuesPath, err := filepath.Abs(valuesPath)
-			if err != nil {
-				return fmt.Errorf("resolve mimir values path: %w", err)
-			}
-			args = append(args, "--values", absValuesPath)
-		}
-		return harness.RunCommand(args[0], args[1:]...)
-	})
 }
 
 func startPortForwardWithRetries(namespace string, attempts int) (string, func(), error) {
@@ -268,8 +257,8 @@ func startPortForward(namespace, localPort string) (func(), error) {
 		"kubectl",
 		"port-forward",
 		"--namespace", namespace,
-		"service/mimir-nginx",
-		localPort+":80",
+		"service/mimir",
+		localPort+":"+mimirHTTPPort,
 	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
