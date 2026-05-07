@@ -9,20 +9,22 @@ import (
 	"testing"
 )
 
-var shardFlag = flag.String("shard", "", "run only tests for shard i/n")
+var shardFlag = flag.String("shard", "", "run only tests assigned to shard i/n (0 <= i < n)")
 
+// shardConfig is used to split the test packages under integration-tests/k8s/tests/*
+// across N parallel CI jobs. Each CI job runs with -shard=i/n; a package
+// runs when its path hashes to current shard, so every package runs on exactly
+// one shard and packages with multiple top-level tests stay together.
 type shardConfig struct {
+	// index is the current shard's index, 0 <= index < total.
 	index int
+	// total is the total number of shards.
 	total int
 }
 
-// ValidateShard returns nil if s parses as a valid "i/n" expression (n > 0
-// and 0 <= i < n), or a descriptive error otherwise. The empty string is
-// treated as invalid here; callers that want to allow "no sharding" should
-// short-circuit before calling.
-//
-// This is the single source of truth for the i/n grammar, used by the test
-// harness's --shard flag and by the runner's interactive form validation.
+// ValidateShard parses s as "i/n" and returns nil iff n > 0 and 0 <= i < n.
+// Shared between the --shard flag and the runner's interactive form so both
+// reject the same set of inputs.
 func ValidateShard(s string) error {
 	_, err := parseShardString(s)
 	return err
@@ -57,12 +59,11 @@ func parseShard() (shardConfig, error) {
 	return parseShardString(*shardFlag)
 }
 
+// shouldRun reports whether this shard owns the given package path.
 func (s shardConfig) shouldRun(key string) bool {
 	if s.total == 0 {
 		return true
 	}
-	// Sharding is done at the test-package level.
-	// The package key is hashed so each shard gets a stable subset.
 	hasher := fnv.New32a()
 	_, _ = hasher.Write([]byte(key))
 	return int(hasher.Sum32()%uint32(s.total)) == s.index

@@ -49,7 +49,12 @@ func Setup(t *testing.T, opts Options) *TestContext {
 	_, callerFile, _, _ := runtime.Caller(1)
 
 	t.Helper()
-	shardCheck(t, t.Name())
+
+	// Shard by package, so multiple top-level tests in one package stay on
+	// the same shard and share its cluster setup. See harness/shard.go.
+	pkgPath := derivePkgPath(callerFile)
+	shardCheck(t, pkgPath)
+
 	if !managedClusterEnabled() {
 		t.Skip("requires managed k8s test runner; use make integration-test-k8s")
 	}
@@ -60,7 +65,7 @@ func Setup(t *testing.T, opts Options) *TestContext {
 
 	ctx := &TestContext{
 		name:    t.Name(),
-		pkgPath: derivePkgPath(callerFile),
+		pkgPath: pkgPath,
 	}
 
 	// Register cleanup BEFORE installing anything: if a dep installs
