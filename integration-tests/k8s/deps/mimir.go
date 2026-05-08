@@ -51,6 +51,7 @@ type metadataResponse struct {
 type ExpectedMetadata struct {
 	Type string `json:"type"`
 	Help string `json:"help"`
+	Unit string `json:"unit"`
 }
 
 // Mimir runs a single-pod Mimir in monolithic mode
@@ -153,7 +154,7 @@ func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []st
 }
 
 // QueryMetadata asserts each expected metric appears in Mimir's
-// /api/v1/metadata with the requested Type/Help.
+// /api/v1/metadata with the requested Type/Help/Unit.
 func (m *Mimir) QueryMetadata(t *testing.T, expected map[string]ExpectedMetadata) {
 	t.Helper()
 	endpoint := m.endpoint("/prometheus/api/v1/metadata")
@@ -180,6 +181,9 @@ func (m *Mimir) QueryMetadata(t *testing.T, expected map[string]ExpectedMetadata
 			}
 			if want.Help != "" && got.Help != want.Help {
 				mismatched = append(mismatched, fmt.Sprintf("%s: help want=%q got=%q", name, want.Help, got.Help))
+			}
+			if want.Unit != "" && got.Unit != want.Unit {
+				mismatched = append(mismatched, fmt.Sprintf("%s: unit want=%q got=%q", name, want.Unit, got.Unit))
 			}
 		}
 
