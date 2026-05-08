@@ -231,16 +231,16 @@ func loadImages(cfg config) error {
 	return nil
 }
 
-// runGoTests runs `go test -v -count=1` for the configured patterns. With
-// multiple packages, go test runs them in parallel and prints output per
-// package once it finishes; with a single package output streams live.
+// runGoTests runs `go test` for the configured patterns. -p 1 is required:
+// every package shares the single kind cluster and would race kubectl /
+// helm / port-forwards if run concurrently. -count=1 disables Go's test
+// cache so re-runs always exercise the live cluster.
 func runGoTests(cfg config) error {
 	patterns := cfg.packages
 	if len(patterns) == 0 {
 		patterns = []string{defaultTestPackages}
 	}
-	// -count=1 disables Go's test cache so re-runs always exercise the live cluster.
-	args := []string{"test", "-v", "-count=1", "-timeout", "30m"}
+	args := []string{"test", "-v", "-count=1", "-p", "1", "-timeout", "30m"}
 	args = append(args, patterns...)
 	if cfg.shard != "" {
 		args = append(args, "-args", "-shard="+cfg.shard)
