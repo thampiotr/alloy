@@ -10,13 +10,10 @@ import (
 )
 
 type CustomWorkloadsOptions struct {
-	// Path is the path to a YAML manifest applied with `kubectl apply -f` on
-	// Install and removed with `kubectl delete -f` on Cleanup.
+	// Path is a YAML manifest applied on Install, deleted on Cleanup.
 	Path string
-	// Vars is an optional map of placeholders substituted in the manifest
-	// before it is applied or deleted. Each `${KEY}` in the file is replaced
-	// with vars[KEY]. Unresolved placeholders fail Install loudly to catch
-	// typos and missing values early. See util.SubstituteVars.
+	// Vars expands ${KEY} placeholders in the manifest. See util.SubstituteVars;
+	// unresolved placeholders fail Install loudly.
 	Vars map[string]string
 }
 
@@ -60,9 +57,7 @@ func (w *CustomWorkloads) Cleanup() {
 	}
 	manifest, err := w.renderManifest()
 	if err != nil {
-		// Render failures during Cleanup are unexpected (Install would have
-		// caught them), but don't escalate beyond a log line: Cleanup must
-		// always be best-effort.
+		// Cleanup is best-effort; log and move on.
 		util.Logf("custom-workloads cleanup render failed: %v", err)
 		return
 	}

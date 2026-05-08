@@ -56,7 +56,7 @@ func TestValidateShard_DelegatesToParser(t *testing.T) {
 }
 
 func TestShouldRun_NoSharding(t *testing.T) {
-	// total == 0 is the unsharded case: every key runs.
+	// total == 0 means unsharded: everything runs.
 	s := shardConfig{}
 	for _, key := range []string{"", "anything", "integration-tests/k8s/tests/foo"} {
 		assert.True(t, s.shouldRun(key), "unsharded should run %q", key)
@@ -64,10 +64,8 @@ func TestShouldRun_NoSharding(t *testing.T) {
 }
 
 func TestShouldRun_PartitionsKeysExactlyOnce(t *testing.T) {
-	// Property: for any n >= 1, every key belongs to exactly one shard.
-	// This is the key correctness invariant — a key landing on zero shards
-	// would mean we silently skip a test in CI; landing on multiple shards
-	// would mean we run it several times.
+	// Correctness invariant: every key lands on exactly one shard
+	// (else we'd silently skip or duplicate tests).
 	keys := []string{
 		"integration-tests/k8s/tests/mimir-alerts-kubernetes",
 		"integration-tests/k8s/tests/prometheus-operator",
@@ -93,9 +91,7 @@ func TestShouldRun_PartitionsKeysExactlyOnce(t *testing.T) {
 }
 
 func TestShouldRun_Deterministic(t *testing.T) {
-	// Same key + same shard config -> same answer. Distribution is hash
-	// based but must be stable across calls within a single binary so a
-	// single CI shard always picks up the same packages.
+	// Same key + same config must always give the same answer.
 	s := shardConfig{index: 1, total: 3}
 	for _, key := range []string{"foo", "bar", "baz", "longer/package/path"} {
 		first := s.shouldRun(key)
@@ -106,9 +102,7 @@ func TestShouldRun_Deterministic(t *testing.T) {
 }
 
 func TestShouldRun_DistributesAcrossShards(t *testing.T) {
-	// Sanity check (not a strict statistical test): with several real-looking
-	// package keys and n=3, no shard should be empty. This protects against
-	// regressions like "always returns shard 0" or hashing the wrong field.
+	// Sanity: with 8 realistic keys and n=3, no shard is empty.
 	keys := []string{
 		"integration-tests/k8s/tests/mimir-alerts-kubernetes",
 		"integration-tests/k8s/tests/prometheus-operator",

@@ -10,22 +10,15 @@ import (
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
 )
 
-// Namespace is a dependency that creates a Kubernetes namespace on Install
-// and deletes it on Cleanup. Other dependencies that need a namespace should
-// receive its name via Name().
-//
-// Place a Namespace first in the test's dependency list so that it is created
-// before any dependencies that install resources into it. Cleanup runs in
-// reverse order, so the namespace is deleted last and naturally cascades any
-// stragglers.
+// Namespace creates a Kubernetes namespace on Install, deletes it on
+// Cleanup. List it first so it's created before deps that target it
+// and deleted last (cleanup runs in reverse).
 type Namespace struct {
 	opts NamespaceOptions
 }
 
 type NamespaceOptions struct {
-	// Name is the name of the namespace. Required.
-	Name string
-	// Labels is an optional map of labels to apply to the namespace.
+	Name   string
 	Labels map[string]string
 }
 
@@ -33,8 +26,6 @@ func NewNamespace(opts NamespaceOptions) *Namespace {
 	return &Namespace{opts: opts}
 }
 
-// Name returns the namespace name. It also satisfies harness.Dependency, where
-// the namespace name doubles as a clear identifier in error messages.
 func (n *Namespace) Name() string {
 	return n.opts.Name
 }
@@ -80,8 +71,7 @@ metadata:
 %s`, name, indentedLabelsBlock(labels))
 }
 
-// indentedLabelsBlock renders a `labels:` block indented to live under
-// `metadata:` in a Kubernetes manifest. Returns "" when there are no labels.
+// indentedLabelsBlock renders a `labels:` block to live under `metadata:`.
 func indentedLabelsBlock(labels map[string]string) string {
 	if len(labels) == 0 {
 		return ""

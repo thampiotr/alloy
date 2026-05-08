@@ -1,5 +1,4 @@
-// Package util provides small helpers shared across the k8s integration test
-// framework (harness, deps).
+// Package util provides helpers shared across runner / harness / deps.
 package util
 
 import (
@@ -8,14 +7,12 @@ import (
 	"sort"
 )
 
-// placeholderRE matches ${UPPER_CASE_NAME} placeholders. Bare $FOO is
-// intentionally not recognized so this is safe to apply to YAML/JSON content
-// where lone dollar signs may appear in unrelated strings.
+// placeholderRE matches ${UPPER_CASE_NAME}. Bare $FOO is not matched so the
+// substitution is safe on YAML/JSON containing unrelated dollar signs.
 var placeholderRE = regexp.MustCompile(`\$\{([A-Z_][A-Z0-9_]*)\}`)
 
-// SubstituteVars replaces every ${KEY} occurrence in content with vars[KEY].
-// It returns an error if any ${KEY} has no entry in vars, listing the missing
-// keys (deduplicated and sorted) so typos and missing values fail loudly.
+// SubstituteVars replaces ${KEY} with vars[KEY]. Returns an error listing
+// any unresolved keys (deduplicated, sorted) so typos fail loudly.
 func SubstituteVars(content string, vars map[string]string) (string, error) {
 	var unresolved []string
 	out := placeholderRE.ReplaceAllStringFunc(content, func(match string) string {

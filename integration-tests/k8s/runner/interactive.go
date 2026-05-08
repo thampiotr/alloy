@@ -12,12 +12,8 @@ import (
 	"github.com/grafana/alloy/integration-tests/k8s/harness"
 )
 
-// configureInteractive presents a small TUI form letting the developer pick the
-// commonly tweaked runner options (reuse cluster, skip image builds, filter by
-// shard or by packages) and writes the choices into cfg before tests run.
-//
-// Both "reuse cluster" and "skip image builds" default to selected because
-// that's the typical dev-machine flow; the user can deselect them in the form.
+// configureInteractive opens a TUI for the common runner options. Reuse
+// cluster and skip image builds default to selected (typical dev flow).
 func configureInteractive(cfg *config) error {
 	runOpts := []string{"reuse-cluster", "skip-image-builds"}
 	filterMode := "all"

@@ -136,11 +136,8 @@ func requireCommands(commands ...string) error {
 	return nil
 }
 
-// maybeBuildImages builds every image the test suite needs: the Alloy image
-// under test and any test fixture images (currently just prom-gen). When
-// --skip-image-builds is set, images must already be present in the local
-// docker daemon — CI uses this after a separate "build images" job restores
-// them into the runner.
+// maybeBuildImages builds the Alloy image and test fixture images (prom-gen).
+// With --skip-image-builds it just verifies they're already in the local daemon.
 func maybeBuildImages(cfg config) error {
 	images := []string{cfg.alloyImage, promGenImage}
 	if cfg.skipImageBuilds {
@@ -221,9 +218,8 @@ func configureEnvVariables(cfg config) error {
 	return os.Setenv(harness.KindClusterEnv, clusterName)
 }
 
-// loadImages loads the Alloy image (the artifact under test) and the test
-// fixture images into the kind cluster. Tests then reference these images by
-// name without having to build or kind-load them themselves.
+// loadImages kind-loads the Alloy and fixture images so tests can reference
+// them by name.
 func loadImages(cfg config) error {
 	for _, image := range []string{cfg.alloyImage, promGenImage} {
 		if err := util.Step("kind load "+image, func() error {
@@ -235,10 +231,9 @@ func loadImages(cfg config) error {
 	return nil
 }
 
-// runGoTests runs `go test -v` once for the configured patterns. With a
-// single package go test streams logs line-by-line; with multiple packages
-// (e.g. the default `./...` wildcard) it runs them in parallel up to
-// GOMAXPROCS and prints each package's output once that package finishes.
+// runGoTests runs `go test -v -count=1` for the configured patterns. With
+// multiple packages, go test runs them in parallel and prints output per
+// package once it finishes; with a single package output streams live.
 func runGoTests(cfg config) error {
 	patterns := cfg.packages
 	if len(patterns) == 0 {

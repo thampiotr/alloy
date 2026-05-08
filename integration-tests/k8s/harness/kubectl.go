@@ -6,19 +6,13 @@ import (
 )
 
 const (
-	// readyTimeout bounds WaitForReady end-to-end. 5m comfortably covers
-	// every current dep on a fresh kind cluster (helm rollouts, image
-	// pulls, alertmanager bootstrap).
-	readyTimeout = 5 * time.Minute
-	// readyAttemptTimeout caps each kubectl wait call so we re-check the
-	// pod selector if the previous attempt timed out.
-	readyAttemptTimeout = "15s"
-	// readyPollInterval is the gap between retries.
-	readyPollInterval = 1 * time.Second
+	readyTimeout        = 5 * time.Minute // overall WaitForReady budget
+	readyAttemptTimeout = "15s"           // per kubectl wait call
+	readyPollInterval   = 1 * time.Second // gap between retries
 )
 
-// ApplyManifest pipes manifest into `kubectl apply -f -`. Pass an empty
-// namespace for cluster-scoped manifests or those declaring their own.
+// ApplyManifest pipes manifest into `kubectl apply -f -`. Empty namespace
+// for cluster-scoped manifests or those declaring their own.
 func ApplyManifest(namespace, manifest string) error {
 	args := []string{"apply"}
 	if namespace != "" {
@@ -41,13 +35,9 @@ func DeleteManifest(namespace, manifest string) error {
 	return RunCommandStdin(manifest, "kubectl", args...)
 }
 
-// WaitForReady blocks until every pod matching selector in namespace reports
-// condition=Ready, or readyTimeout elapses. The retry loop swallows the
-// transient "no matching resources found" error so callers can call this
-// straight after a kubectl apply without racing pod creation.
-//
-// Call this from a Dependency's Install before returning, so callers can
-// rely on "Install has returned" meaning "the dep is usable".
+// WaitForReady blocks until every pod matching selector in namespace is
+// Ready, or readyTimeout elapses. The retry loop tolerates "no matching
+// resources found" so it's safe to call right after kubectl apply.
 func WaitForReady(namespace, selector string) error {
 	deadline := time.Now().Add(readyTimeout)
 	var lastErr error

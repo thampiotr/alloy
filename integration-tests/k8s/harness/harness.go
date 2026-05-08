@@ -1,8 +1,6 @@
-// Package harness wires Go tests in integration-tests/k8s/tests/... to the
-// runner-managed kind cluster. Tests call Setup with a list of Dependencies
-// (deps.Namespace, deps.Mimir, ...); Setup installs them in order and
-// registers a t.Cleanup that tears them down in reverse after the test (and
-// any parallel subtests) completes.
+// Package harness wires Go tests to the runner-managed kind cluster. Tests
+// call Setup with a list of Dependencies; Setup installs them in order and
+// registers a t.Cleanup tearing them down in reverse (parallel-subtest safe).
 package harness
 
 import (
@@ -15,10 +13,9 @@ import (
 	"github.com/grafana/alloy/integration-tests/k8s/util"
 )
 
-// Dependency is implemented by every test fixture (deps.Namespace,
-// deps.Mimir, deps.Alloy, ...). Install must block until the dep is usable
-// (typically by calling WaitForReady) so callers can rely on "Install
-// returned" meaning "dep is ready". Cleanup is best-effort.
+// Dependency is implemented by every test fixture. Install must block
+// until the dep is usable so "Install returned" means "ready". Cleanup
+// is best-effort.
 type Dependency interface {
 	Name() string
 	Install(*TestContext) error
@@ -26,14 +23,11 @@ type Dependency interface {
 }
 
 type Options struct {
-	// Dependencies is a list of dependencies to install in order. They are
-	// cleaned up in reverse order.
+	// Dependencies are installed in order, cleaned up in reverse.
 	Dependencies []Dependency
 }
 
-// TestContext is the runtime context for a test. It tracks installed
-// dependencies and registered diagnostic hooks. Namespace ownership lives
-// in dependencies (e.g. deps.Namespace), not here.
+// TestContext tracks installed deps and diagnostic hooks for a single test.
 type TestContext struct {
 	name            string
 	pkgPath         string
@@ -42,16 +36,13 @@ type TestContext struct {
 }
 
 func Setup(t *testing.T, opts Options) *TestContext {
-	// IMPORTANT: capture the caller's file path on the very first line so the
-	// runtime.Caller frame depth (1) always points at the test that invoked
-	// Setup. Any helper introduced before this line would silently shift the
-	// frame and the failure-diagnostics repro hint would lose accuracy.
+	// runtime.Caller(1) must run first so the frame still points at the
+	// test file; any helper above this line would shift the frame.
 	_, callerFile, _, _ := runtime.Caller(1)
 
 	t.Helper()
 
-	// Shard by package, so multiple top-level tests in one package stay on
-	// the same shard and share its cluster setup. See harness/shard.go.
+	// Shard by package — see harness/shard.go.
 	pkgPath := derivePkgPath(callerFile)
 	shardCheck(t, pkgPath)
 
@@ -68,12 +59,8 @@ func Setup(t *testing.T, opts Options) *TestContext {
 		pkgPath: pkgPath,
 	}
 
-	// Register cleanup BEFORE installing anything: if a dep installs
-	// successfully but a later one fails, t.Cleanup still tears down what
-	// was already installed. Using t.Cleanup (not defer in the test) is also
-	// what makes parallel subtests safe — defer would run as soon as the
-	// parent function body returns, which happens before paused subtests
-	// resume.
+	// Register cleanup before installing so partial-install failures still
+	// tear down. t.Cleanup (not defer) is what makes parallel subtests safe.
 	t.Cleanup(func() { ctx.cleanup(t) })
 
 	for _, dep := range opts.Dependencies {
@@ -87,11 +74,8 @@ func Setup(t *testing.T, opts Options) *TestContext {
 	return ctx
 }
 
-// derivePkgPath returns a repo-rooted package path (e.g.
-// "integration-tests/k8s/tests/mimir-alerts-kubernetes") suitable for the
-// failure-diagnostics repro hint. We trim everything before the
-// "integration-tests/" boundary because all k8s integration tests live under
-// that directory; if the framework ever moves elsewhere this needs an update.
+// derivePkgPath returns the repo-rooted package path (e.g.
+// "integration-tests/k8s/tests/foo") for the failure-diagnostics repro hint.
 func derivePkgPath(callerFile string) string {
 	if callerFile == "" {
 		return ""

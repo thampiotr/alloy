@@ -16,17 +16,13 @@ const (
 	blackboxExporterSelector = "app=blackbox-exporter"
 )
 
-// BlackboxExporter is the upstream prom/blackbox-exporter, used as a Probe
-// target by tests that exercise the prometheus operator Probe resource.
-// Pulls the image, applies its Deployment + ConfigMap + Service, and waits
-// for the pod to be running.
+// BlackboxExporter installs prom/blackbox-exporter as a Probe target.
 type BlackboxExporter struct {
 	opts      BlackboxExporterOptions
 	installed bool
 }
 
 type BlackboxExporterOptions struct {
-	// Namespace into which the exporter is deployed. Required.
 	Namespace string
 }
 

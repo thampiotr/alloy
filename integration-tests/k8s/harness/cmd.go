@@ -11,8 +11,7 @@ import (
 	"strings"
 )
 
-// RunCommand runs name with args, inheriting stdout/stderr and the managed
-// test kubeconfig via CommandEnv.
+// RunCommand runs name with args, inheriting stdout/stderr; CommandEnv pins KUBECONFIG.
 func RunCommand(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
@@ -21,9 +20,8 @@ func RunCommand(name string, args ...string) error {
 	return cmd.Run()
 }
 
-// RunCommandQuiet runs name with args and discards stdout/stderr. Use it for
-// idempotency checks (e.g. `docker image inspect`) where the success/failure
-// of the command is the signal and the output would only add noise.
+// RunCommandQuiet is RunCommand with stdout/stderr discarded; use it when
+// only the exit code matters (e.g. `docker image inspect`).
 func RunCommandQuiet(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = io.Discard
@@ -32,9 +30,8 @@ func RunCommandQuiet(name string, args ...string) error {
 	return cmd.Run()
 }
 
-// RunCommandStdin runs name with args, piping the given content as stdin.
-// stdout and stderr are inherited; the managed test kubeconfig is set via
-// CommandEnv. Useful for `kubectl apply -f -` style invocations.
+// RunCommandStdin is RunCommand with stdin piped from the given string.
+// Useful for `kubectl apply -f -` style invocations.
 func RunCommandStdin(stdin, name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdin = strings.NewReader(stdin)
@@ -44,9 +41,8 @@ func RunCommandStdin(stdin, name string, args ...string) error {
 	return cmd.Run()
 }
 
-// runDiagnosticCommand runs name with args under ctx and prints the combined
-// output. It is intended for failure-diagnostics hooks and never inherits
-// stdin. Errors are returned with context-aware timeout reporting.
+// runDiagnosticCommand runs name under ctx and prints combined output.
+// Used by failure-diagnostics hooks; surfaces ctx timeouts in errors.
 func runDiagnosticCommand(ctx context.Context, name string, args ...string) error {
 	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = CommandEnv()
@@ -67,9 +63,8 @@ func runDiagnosticCommand(ctx context.Context, name string, args ...string) erro
 	return fmt.Errorf("%s %v failed: %w", name, args, err)
 }
 
-// RunDiagnosticCommands runs each command in turn, accumulating errors so a
-// single command's failure does not skip the rest. Returns a joined error
-// (or nil) for the caller to log.
+// RunDiagnosticCommands runs each command, joining errors so one failure
+// doesn't skip the rest. Returns a single joined error (or nil).
 func RunDiagnosticCommands(ctx context.Context, commands [][]string) error {
 	var errs []string
 	for _, args := range commands {

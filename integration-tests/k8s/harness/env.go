@@ -16,9 +16,7 @@ const (
 	AlloyImageEnv     = "ALLOY_TESTS_IMAGE"
 )
 
-// KindClusterName returns the name of the kind cluster the test runner is
-// using, or "" when the runner did not export it. Dependencies that need to
-// `kind load docker-image` should call this rather than hardcoding a name.
+// KindClusterName returns the runner's kind cluster name (or "" if unset).
 func KindClusterName() string {
 	return os.Getenv(KindClusterEnv)
 }

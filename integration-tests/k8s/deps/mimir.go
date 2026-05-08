@@ -25,9 +25,8 @@ const (
 	timeout       = 1 * time.Minute
 	retryInterval = 500 * time.Millisecond
 
-	// mimirSelector matches the single Mimir pod created from manifests/mimir.yaml.
+	// Both must match manifests/mimir.yaml.
 	mimirSelector = "app=mimir"
-	// mimirHTTPPort is the http_listen_port configured in manifests/mimir.yaml.
 	mimirHTTPPort = "9009"
 )
 
@@ -54,12 +53,8 @@ type ExpectedMetadata struct {
 	Unit string `json:"unit"`
 }
 
-// Mimir runs a single-pod Mimir in monolithic mode
-// with filesystem storage and inmemory rings.
-//
-// In-cluster URL: http://mimir:9009 (Service name "mimir", port 9009).
-// Tests should point Alloy's `prometheus.remote_write` /
-// `mimir.alerts.kubernetes` at that endpoint.
+// Mimir runs a single-pod Mimir in monolithic mode (filesystem storage,
+// in-memory rings). In-cluster URL: http://mimir:9009.
 type Mimir struct {
 	opts            MimirOptions
 	namespace       string
@@ -69,7 +64,6 @@ type Mimir struct {
 }
 
 type MimirOptions struct {
-	// Namespace to install Mimir into. Required.
 	Namespace string
 }
 
@@ -91,8 +85,6 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 	}
 	m.installed = true
 
-	// Wait for the readiness probe so port-forward and HTTP queries below
-	// connect to a usable Service endpoint.
 	if err := util.Step("wait for mimir pod ready", func() error {
 		return harness.WaitForReady(m.namespace, mimirSelector)
 	}); err != nil {

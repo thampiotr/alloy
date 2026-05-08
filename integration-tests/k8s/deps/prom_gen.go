@@ -11,21 +11,17 @@ import (
 //go:embed manifests/prom-gen.yaml
 var promGenManifest string
 
-// promGenSelector matches the single prom-gen pod created from
-// manifests/prom-gen.yaml. The image itself ("prom-gen:latest") is built
-// and kind-loaded by the runner — see Makefile target `prom-gen-image` and
-// runner.maybeBuildImages — so this dep only has to apply the manifest.
+// The prom-gen:latest image is built and kind-loaded by the runner.
 const promGenSelector = "app=prom-gen"
 
-// PromGen is a small Go HTTP server that emits Prometheus metrics. It's used
-// as a scrape target by tests that exercise prometheus operator components.
+// PromGen is a tiny HTTP server emitting Prometheus metrics. Used as a
+// scrape target in prometheus-operator tests.
 type PromGen struct {
 	opts      PromGenOptions
 	installed bool
 }
 
 type PromGenOptions struct {
-	// Namespace into which prom-gen is deployed. Required.
 	Namespace string
 }
 

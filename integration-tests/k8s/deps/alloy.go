@@ -12,21 +12,14 @@ import (
 )
 
 type AlloyOptions struct {
-	// Namespace is the namespace to install the alloy helm chart into. Required.
-	// The namespace must already exist; pair this dependency with a Namespace
-	// dependency listed earlier in the test setup.
+	// Namespace must already exist (pair with a Namespace dep earlier in the list).
 	Namespace string
-	// Release is the name of the helm release. Required.
+	// Release is the helm release name.
 	Release string
-	// ConfigPath is an optional path to a .alloy config file. When set, the
-	// framework creates a ConfigMap named "alloy-config" from this file and
-	// configures the chart (alloy.configMap.create/name/key) to consume it.
-	// When empty, no ConfigMap is created and Alloy configuration is left to
-	// the chart values (e.g. an inline config in ValuesPath).
+	// ConfigPath is an optional .alloy file. When set, mounted via a "alloy-config"
+	// ConfigMap and wired to the chart (alloy.configMap.{create,name,key}).
 	ConfigPath string
-	// ValuesPath is an optional path to a helm values file applied to the
-	// Alloy chart. Use it to set chart options like controller.type, replicas,
-	// stabilityLevel, or alloy.configMap.content for an inline config.
+	// ValuesPath is an optional helm values file applied to the Alloy chart.
 	ValuesPath string
 }
 
@@ -131,10 +124,8 @@ func (a *Alloy) Cleanup() {
 	}
 }
 
-// createAlloyConfigMap creates the "alloy-config" ConfigMap in the given
-// namespace using the contents of the .alloy file at configPath under the
-// "config.alloy" key. It expects a fresh namespace and fails if the ConfigMap
-// already exists.
+// createAlloyConfigMap creates the "alloy-config" ConfigMap with key
+// "config.alloy" sourced from configPath. Fails if it already exists.
 func createAlloyConfigMap(namespace, configPath string) error {
 	absConfigPath, err := filepath.Abs(configPath)
 	if err != nil {

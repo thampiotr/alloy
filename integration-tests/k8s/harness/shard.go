@@ -11,20 +11,15 @@ import (
 
 var shardFlag = flag.String("shard", "", "run only tests assigned to shard i/n (0 <= i < n)")
 
-// shardConfig is used to split the test packages under integration-tests/k8s/tests/*
-// across N parallel CI jobs. Each CI job runs with -shard=i/n; a package
-// runs when its path hashes to current shard, so every package runs on exactly
-// one shard and packages with multiple top-level tests stay together.
+// shardConfig splits test packages across N parallel CI jobs. A package
+// runs only when fnv32a(pkgPath) % total == index, keeping packages with
+// multiple top-level tests on the same shard.
 type shardConfig struct {
-	// index is the current shard's index, 0 <= index < total.
-	index int
-	// total is the total number of shards.
+	index int // 0 <= index < total
 	total int
 }
 
 // ValidateShard parses s as "i/n" and returns nil iff n > 0 and 0 <= i < n.
-// Shared between the --shard flag and the runner's interactive form so both
-// reject the same set of inputs.
 func ValidateShard(s string) error {
 	_, err := parseShardString(s)
 	return err
