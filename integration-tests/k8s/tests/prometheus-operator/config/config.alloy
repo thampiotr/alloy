@@ -9,6 +9,10 @@ livedebugging {
 prometheus.operator.servicemonitors "default" {
   forward_to = [prometheus.relabel.servicemonitors.receiver]
   namespaces = [sys.env("POD_NAMESPACE")]
+  // honor_metadata forwards TYPE/HELP; asserted in k8s_test.
+  scrape {
+    honor_metadata = true
+  }
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -35,6 +39,9 @@ prometheus.relabel "servicemonitors" {
 prometheus.operator.podmonitors "default" {
   forward_to = [prometheus.relabel.podmonitors.receiver]
   namespaces = [sys.env("POD_NAMESPACE")]
+  scrape {
+    honor_metadata = true
+  }
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -61,6 +68,9 @@ prometheus.relabel "podmonitors" {
 prometheus.operator.probes "default" {
   forward_to = [prometheus.relabel.probes.receiver]
   namespaces = [sys.env("POD_NAMESPACE")]
+  scrape {
+    honor_metadata = true
+  }
   selector {
     match_labels = {
       "alloy-integration-test" = "true",
@@ -87,6 +97,9 @@ prometheus.relabel "probes" {
 prometheus.operator.scrapeconfigs "default" {
   forward_to = [prometheus.relabel.scrapeconfigs.receiver]
   namespaces = [sys.env("POD_NAMESPACE")]
+  scrape {
+    honor_metadata = true
+  }
   selector {
     match_labels = {
       "alloy-integration-test" = "true",

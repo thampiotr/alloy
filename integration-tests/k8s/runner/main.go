@@ -153,10 +153,7 @@ func maybeBuildImages(cfg config) error {
 		return nil
 	}
 	if err := util.Step("make alloy-image", func() error {
-		// Pass ALLOY_IMAGE so a custom --alloy-image flag actually gets
-		// built with that tag. Without this, make would always tag as
-		// the Makefile default and the later `kind load` of the
-		// requested tag would fail.
+		// Pass ALLOY_IMAGE so a custom --alloy-image flag picks the right tag.
 		return harness.RunCommand("make", "alloy-image", "ALLOY_IMAGE="+cfg.alloyImage)
 	}); err != nil {
 		return err
@@ -247,10 +244,7 @@ func runGoTests(cfg config) error {
 	if len(patterns) == 0 {
 		patterns = []string{defaultTestPackages}
 	}
-	// -count=1 disables Go's test result cache. Without it, a re-run with no
-	// source changes would print "(cached)" and skip actually exercising the
-	// live cluster — silent passing is the worst failure mode for integration
-	// tests, so we always force them to run.
+	// -count=1 disables Go's test cache so re-runs always exercise the live cluster.
 	args := []string{"test", "-v", "-count=1", "-timeout", "30m"}
 	args = append(args, patterns...)
 	if cfg.shard != "" {

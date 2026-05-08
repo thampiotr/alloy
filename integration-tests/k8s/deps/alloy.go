@@ -149,17 +149,14 @@ func createAlloyConfigMap(namespace, configPath string) error {
 	return nil
 }
 
-// splitImageRef splits a "repo:tag" reference on the LAST ":", so registry
-// ports such as "localhost:5000/alloy:dev" parse correctly. Returns ok=false
-// for empty input or refs without a tag. Digest refs ("repo@sha256:...")
-// are not supported here — the runner only ever passes a repo:tag value.
+// splitImageRef splits "repo:tag" on the last ":" so registry-port refs like
+// "localhost:5000/alloy:dev" parse correctly. ok=false on missing tag.
 func splitImageRef(ref string) (repo, tag string, ok bool) {
 	idx := strings.LastIndex(ref, ":")
 	if idx < 0 {
 		return "", "", false
 	}
-	// A ":" that appears before the last "/" belongs to a registry port,
-	// not the tag separator. e.g. "localhost:5000/alloy" has no tag.
+	// ":" before the last "/" is a registry port, not the tag separator.
 	if slash := strings.LastIndex(ref, "/"); slash > idx {
 		return "", "", false
 	}

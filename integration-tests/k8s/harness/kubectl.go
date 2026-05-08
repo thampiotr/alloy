@@ -17,9 +17,8 @@ const (
 	readyPollInterval = 1 * time.Second
 )
 
-// ApplyManifest applies a YAML manifest from memory using `kubectl apply -f -`.
-// When namespace is non-empty, --namespace is included; pass "" for manifests
-// that are cluster-scoped or already declare metadata.namespace.
+// ApplyManifest pipes manifest into `kubectl apply -f -`. Pass an empty
+// namespace for cluster-scoped manifests or those declaring their own.
 func ApplyManifest(namespace, manifest string) error {
 	args := []string{"apply"}
 	if namespace != "" {
@@ -29,10 +28,8 @@ func ApplyManifest(namespace, manifest string) error {
 	return RunCommandStdin(manifest, "kubectl", args...)
 }
 
-// DeleteManifest deletes the resources described by a YAML manifest. Always
-// passes --ignore-not-found, --wait and --timeout=10m so cleanup paths are
-// idempotent and don't leak resources between tests. namespace works the
-// same way as in ApplyManifest.
+// DeleteManifest mirrors ApplyManifest for `kubectl delete`. Always passes
+// --ignore-not-found, --wait and --timeout=10m so cleanup is idempotent.
 func DeleteManifest(namespace, manifest string) error {
 	args := []string{"delete"}
 	if namespace != "" {

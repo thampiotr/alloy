@@ -41,6 +41,18 @@ type metricsResponse struct {
 	} `json:"data"`
 }
 
+type metadataResponse struct {
+	Status string                        `json:"status"`
+	Data   map[string][]ExpectedMetadata `json:"data"`
+}
+
+// ExpectedMetadata is both the JSON payload shape from Mimir's metadata
+// endpoint and the input to QueryMetadata. Empty fields are not asserted.
+type ExpectedMetadata struct {
+	Type string `json:"type"`
+	Help string `json:"help"`
+}
+
 // Mimir runs a single-pod Mimir in monolithic mode
 // with filesystem storage and inmemory rings.
 //
@@ -140,6 +152,42 @@ func (m *Mimir) QueryMetrics(t *testing.T, testName string, expectedMetrics []st
 	}, timeout, retryInterval)
 }
 
+// QueryMetadata asserts each expected metric appears in Mimir's
+// /api/v1/metadata with the requested Type/Help.
+func (m *Mimir) QueryMetadata(t *testing.T, expected map[string]ExpectedMetadata) {
+	t.Helper()
+	endpoint := m.endpoint("/prometheus/api/v1/metadata")
+
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		resp := curl(c, endpoint)
+
+		var parsed metadataResponse
+		err := json.Unmarshal([]byte(resp), &parsed)
+		require.NoError(c, err, "failed to parse mimir metadata response: %s", resp)
+		require.Equal(c, "success", parsed.Status, "mimir metadata query failed: %s", resp)
+
+		var missing []string
+		var mismatched []string
+		for name, want := range expected {
+			entries, ok := parsed.Data[name]
+			if !ok || len(entries) == 0 {
+				missing = append(missing, name)
+				continue
+			}
+			got := entries[0]
+			if want.Type != "" && got.Type != want.Type {
+				mismatched = append(mismatched, fmt.Sprintf("%s: type want=%q got=%q", name, want.Type, got.Type))
+			}
+			if want.Help != "" && got.Help != want.Help {
+				mismatched = append(mismatched, fmt.Sprintf("%s: help want=%q got=%q", name, want.Help, got.Help))
+			}
+		}
+
+		require.Emptyf(c, missing, "missing metadata for metrics: %v", missing)
+		require.Emptyf(c, mismatched, "metadata mismatches: %v", mismatched)
+	}, timeout, retryInterval)
+}
+
 func (m *Mimir) CheckAlertsConfig(t *testing.T, expectedFile string) {
 	t.Helper()
 	expectedMimirConfigBytes, err := os.ReadFile(expectedFile)
@@ -227,9 +275,8 @@ func pickFreeLocalPort() (string, error) {
 	return port, nil
 }
 
-// curlTimeout caps a single HTTP attempt against Mimir. Without it a stalled
-// port-forward would block inside the EventuallyWithT callback well past the
-// outer retry deadline, masking the failure as a generic timeout.
+// curlTimeout caps each HTTP attempt so a stalled port-forward doesn't
+// block the outer EventuallyWithT past its deadline.
 const curlTimeout = 5 * time.Second
 
 func curl(c *assert.CollectT, targetURL string) string {

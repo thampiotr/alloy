@@ -7,10 +7,8 @@ import (
 	"strings"
 )
 
-// Env-var names used to plumb runner-side configuration into test binaries.
-// The runner sets these in configureEnvVariables; the harness and deps read
-// them. Kept here as the single source of truth so name typos surface as
-// build errors rather than silent test misconfiguration.
+// Env-var names plumbing runner config into test binaries. Single source
+// of truth shared by runner, harness and deps.
 const (
 	ManagedClusterEnv = "ALLOY_TESTS_MANAGED_CLUSTER"
 	KubeconfigEnv     = "ALLOY_TESTS_KUBECONFIG"
@@ -47,14 +45,10 @@ func kubeconfigFromEnv() (string, error) {
 	return kubeconfig, nil
 }
 
-// CommandEnv returns the process environment with KUBECONFIG forced to the
-// managed test kubeconfig (when set). Pass it as cmd.Env when running a long
-// lived command directly with exec.Cmd; for one-shot invocations prefer the
-// RunCommand* helpers which apply this automatically.
-//
-// Any pre-existing KUBECONFIG entry inherited from os.Environ() is stripped
-// before appending — POSIX permits duplicate keys but tools differ on which
-// one wins, so we pin a single deterministic value.
+// CommandEnv returns the process environment with KUBECONFIG pinned to the
+// managed test kubeconfig. Any pre-existing KUBECONFIG is stripped first to
+// avoid POSIX duplicate-key ambiguity. Use the RunCommand* helpers for
+// one-shot invocations; pass this as cmd.Env for long-lived exec.Cmd.
 func CommandEnv() []string {
 	parent := os.Environ()
 	env := make([]string, 0, len(parent)+1)

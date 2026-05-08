@@ -38,6 +38,10 @@ func TestPrometheusOperator(t *testing.T) {
 			"test_servicemonitors_golang_counter",
 			"test_servicemonitors_golang_gauge",
 		})
+		mimir.QueryMetadata(t, map[string]deps.ExpectedMetadata{
+			"test_servicemonitors_golang_counter": {Type: "counter", Help: "The counter description string"},
+			"test_servicemonitors_golang_gauge":   {Type: "gauge", Help: "The gauge description string"},
+		})
 	})
 
 	t.Run("PodMonitors", func(t *testing.T) {
@@ -47,6 +51,10 @@ func TestPrometheusOperator(t *testing.T) {
 		mimir.QueryMetrics(t, "podmonitor", []string{
 			"test_podmonitors_golang_counter",
 			"test_podmonitors_golang_gauge",
+		})
+		mimir.QueryMetadata(t, map[string]deps.ExpectedMetadata{
+			"test_podmonitors_golang_counter": {Type: "counter", Help: "The counter description string"},
+			"test_podmonitors_golang_gauge":   {Type: "gauge", Help: "The gauge description string"},
 		})
 	})
 
@@ -58,6 +66,10 @@ func TestPrometheusOperator(t *testing.T) {
 			"test_probes_probe_success",
 			"test_probes_probe_duration_seconds",
 		})
+		mimir.QueryMetadata(t, map[string]deps.ExpectedMetadata{
+			"test_probes_probe_success":          {Type: "gauge", Help: "Displays whether or not the probe was a success"},
+			"test_probes_probe_duration_seconds": {Type: "gauge", Help: "Returns how long the probe took to complete in seconds"},
+		})
 	})
 
 	t.Run("ScrapeConfigs", func(t *testing.T) {
@@ -67,6 +79,10 @@ func TestPrometheusOperator(t *testing.T) {
 		mimir.QueryMetrics(t, "scrapeconfig", []string{
 			"test_scrapeconfigs_golang_counter",
 			"test_scrapeconfigs_golang_gauge",
+		})
+		mimir.QueryMetadata(t, map[string]deps.ExpectedMetadata{
+			"test_scrapeconfigs_golang_counter": {Type: "counter", Help: "The counter description string"},
+			"test_scrapeconfigs_golang_gauge":   {Type: "gauge", Help: "The gauge description string"},
 		})
 	})
 }
