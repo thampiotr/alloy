@@ -247,7 +247,11 @@ func runGoTests(cfg config) error {
 	if len(patterns) == 0 {
 		patterns = []string{defaultTestPackages}
 	}
-	args := []string{"test", "-v", "-timeout", "30m"}
+	// -count=1 disables Go's test result cache. Without it, a re-run with no
+	// source changes would print "(cached)" and skip actually exercising the
+	// live cluster — silent passing is the worst failure mode for integration
+	// tests, so we always force them to run.
+	args := []string{"test", "-v", "-count=1", "-timeout", "30m"}
 	args = append(args, patterns...)
 	if cfg.shard != "" {
 		args = append(args, "-args", "-shard="+cfg.shard)

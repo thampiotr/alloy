@@ -29,8 +29,14 @@ func NewCustomWorkloads(opts CustomWorkloadsOptions) *CustomWorkloads {
 	return &CustomWorkloads{opts: opts}
 }
 
+// Name includes the manifest's base filename so that a test installing more
+// than one CustomWorkloads dep produces distinguishable log lines and error
+// messages (e.g. "custom-workloads (workloads.yaml)").
 func (w *CustomWorkloads) Name() string {
-	return "custom-workloads"
+	if w.opts.Path == "" {
+		return "custom-workloads"
+	}
+	return "custom-workloads (" + filepath.Base(w.opts.Path) + ")"
 }
 
 func (w *CustomWorkloads) Install(_ *harness.TestContext) error {

@@ -12,7 +12,7 @@ import (
 )
 
 // RunCommand runs name with args, inheriting stdout/stderr and the managed
-// test kubeconfig via commandEnv.
+// test kubeconfig via CommandEnv.
 func RunCommand(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
 	cmd.Stdout = os.Stdout
