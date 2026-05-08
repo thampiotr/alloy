@@ -231,16 +231,17 @@ func loadImages(cfg config) error {
 	return nil
 }
 
-// runGoTests runs `go test` for the configured patterns. -p 1 is required:
-// every package shares the single kind cluster and would race kubectl /
-// helm / port-forwards if run concurrently. -count=1 disables Go's test
-// cache so re-runs always exercise the live cluster.
+// runGoTests runs `go test` for the configured patterns. We intentionally
+// leave package-level parallelism on (no `-p 1`): each test package owns a
+// distinct namespace, so concurrent packages don't conflict on the shared
+// kind cluster and we get faster wall-clock per shard. -count=1 disables
+// Go's test cache so re-runs always exercise the live cluster.
 func runGoTests(cfg config) error {
 	patterns := cfg.packages
 	if len(patterns) == 0 {
 		patterns = []string{defaultTestPackages}
 	}
-	args := []string{"test", "-v", "-count=1", "-p", "1", "-timeout", "30m"}
+	args := []string{"test", "-v", "-count=1", "-timeout", "30m"}
 	args = append(args, patterns...)
 	if cfg.shard != "" {
 		args = append(args, "-args", "-shard="+cfg.shard)
