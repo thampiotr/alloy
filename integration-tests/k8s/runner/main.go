@@ -153,7 +153,11 @@ func maybeBuildImages(cfg config) error {
 		return nil
 	}
 	if err := util.Step("make alloy-image", func() error {
-		return harness.RunCommand("make", "alloy-image")
+		// Pass ALLOY_IMAGE so a custom --alloy-image flag actually gets
+		// built with that tag. Without this, make would always tag as
+		// the Makefile default and the later `kind load` of the
+		// requested tag would fail.
+		return harness.RunCommand("make", "alloy-image", "ALLOY_IMAGE="+cfg.alloyImage)
 	}); err != nil {
 		return err
 	}
