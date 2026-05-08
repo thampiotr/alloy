@@ -7,37 +7,42 @@ import (
 	"strings"
 )
 
+// Env-var names used to plumb runner-side configuration into test binaries.
+// The runner sets these in configureEnvVariables; the harness and deps read
+// them. Kept here as the single source of truth so name typos surface as
+// build errors rather than silent test misconfiguration.
 const (
-	managedClusterEnv  = "ALLOY_TESTS_MANAGED_CLUSTER"
-	kubeconfigEnv      = "ALLOY_TESTS_KUBECONFIG"
-	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
+	ManagedClusterEnv = "ALLOY_TESTS_MANAGED_CLUSTER"
+	KubeconfigEnv     = "ALLOY_TESTS_KUBECONFIG"
+	KindClusterEnv    = "ALLOY_TESTS_KIND_CLUSTER"
+	AlloyImageEnv     = "ALLOY_TESTS_IMAGE"
 )
 
 // KindClusterName returns the name of the kind cluster the test runner is
 // using, or "" when the runner did not export it. Dependencies that need to
 // `kind load docker-image` should call this rather than hardcoding a name.
 func KindClusterName() string {
-	return os.Getenv(kindClusterNameEnv)
+	return os.Getenv(KindClusterEnv)
 }
 
 func managedClusterEnabled() bool {
-	return os.Getenv(managedClusterEnv) == "1"
+	return os.Getenv(ManagedClusterEnv) == "1"
 }
 
 func kubeconfigFromEnv() (string, error) {
 	if !managedClusterEnabled() {
-		return "", fmt.Errorf("missing %s=1, run tests with make integration-test-k8s or go run ./integration-tests/k8s/runner", managedClusterEnv)
+		return "", fmt.Errorf("missing %s=1, run tests with make integration-test-k8s or go run ./integration-tests/k8s/runner", ManagedClusterEnv)
 	}
 
-	kubeconfig := os.Getenv(kubeconfigEnv)
+	kubeconfig := os.Getenv(KubeconfigEnv)
 	if kubeconfig == "" {
-		return "", fmt.Errorf("missing %s, run tests with make integration-test-k8s or go run ./integration-tests/k8s/runner", kubeconfigEnv)
+		return "", fmt.Errorf("missing %s, run tests with make integration-test-k8s or go run ./integration-tests/k8s/runner", KubeconfigEnv)
 	}
 	if !filepath.IsAbs(kubeconfig) {
-		return "", fmt.Errorf("%s must be an absolute path, got %q", kubeconfigEnv, kubeconfig)
+		return "", fmt.Errorf("%s must be an absolute path, got %q", KubeconfigEnv, kubeconfig)
 	}
 	if _, err := os.Stat(kubeconfig); err != nil {
-		return "", fmt.Errorf("%s %q is not accessible: %w", kubeconfigEnv, kubeconfig, err)
+		return "", fmt.Errorf("%s %q is not accessible: %w", KubeconfigEnv, kubeconfig, err)
 	}
 	return kubeconfig, nil
 }
@@ -58,7 +63,7 @@ func CommandEnv() []string {
 			env = append(env, kv)
 		}
 	}
-	if kubeconfig := os.Getenv(kubeconfigEnv); kubeconfig != "" {
+	if kubeconfig := os.Getenv(KubeconfigEnv); kubeconfig != "" {
 		env = append(env, "KUBECONFIG="+kubeconfig)
 	}
 	return env

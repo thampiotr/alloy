@@ -11,10 +11,6 @@ import (
 	"github.com/grafana/alloy/integration-tests/k8s/util"
 )
 
-// alloyImageEnv is the env var the test runner sets to the Alloy image
-// (in "repo:tag" form) that tests should install via the helm chart.
-const alloyImageEnv = "ALLOY_TESTS_IMAGE"
-
 type AlloyOptions struct {
 	// Namespace is the namespace to install the alloy helm chart into. Required.
 	// The namespace must already exist; pair this dependency with a Namespace
@@ -61,10 +57,10 @@ func (a *Alloy) Install(ctx *harness.TestContext) error {
 		}
 	}
 
-	image := os.Getenv(alloyImageEnv)
+	image := os.Getenv(harness.AlloyImageEnv)
 	imageRepo, imageTag, ok := splitImageRef(image)
 	if !ok {
-		return fmt.Errorf("%s must be in repo:tag format (the test runner sets this), got %q", alloyImageEnv, image)
+		return fmt.Errorf("%s must be in repo:tag format (the test runner sets this), got %q", harness.AlloyImageEnv, image)
 	}
 	repoRoot, err := repoRootFromCwd()
 	if err != nil {

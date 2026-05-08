@@ -17,13 +17,31 @@ const (
 	readyPollInterval = 1 * time.Second
 )
 
-// Kubectl runs kubectl with the managed test kubeconfig. Returns an error if
-// no args are given so accidental empty invocations fail loudly.
-func Kubectl(args ...string) error {
-	if len(args) == 0 {
-		return fmt.Errorf("kubectl requires at least one argument")
+// ApplyManifest applies a YAML manifest from memory using `kubectl apply -f -`.
+// When namespace is non-empty, --namespace is included; pass "" for manifests
+// that are cluster-scoped or already declare metadata.namespace.
+func ApplyManifest(namespace, manifest string) error {
+	args := []string{"apply"}
+	if namespace != "" {
+		args = append(args, "--namespace", namespace)
 	}
-	return RunCommand("kubectl", args...)
+	args = append(args, "-f", "-")
+	return RunCommandStdin(manifest, "kubectl", args...)
+}
+
+// DeleteManifest deletes the resources described by a YAML manifest. Always
+// passes --ignore-not-found, --wait and --timeout=10m so cleanup paths are
+// idempotent and don't leak resources between tests. namespace works the
+// same way as in ApplyManifest.
+func DeleteManifest(namespace, manifest string) error {
+	args := []string{"delete"}
+	if namespace != "" {
+		args = append(args, "--namespace", namespace)
+	}
+	args = append(args, "-f", "-",
+		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
+	)
+	return RunCommandStdin(manifest, "kubectl", args...)
 }
 
 // WaitForReady blocks until at least one pod matching selector in namespace

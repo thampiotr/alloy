@@ -47,7 +47,7 @@ func (w *CustomWorkloads) Install(_ *harness.TestContext) error {
 	if err != nil {
 		return err
 	}
-	return harness.RunCommandStdin(manifest, "kubectl", "apply", "-f", "-")
+	return harness.ApplyManifest("", manifest)
 }
 
 func (w *CustomWorkloads) Cleanup() {
@@ -62,9 +62,7 @@ func (w *CustomWorkloads) Cleanup() {
 		util.Logf("custom-workloads cleanup render failed: %v", err)
 		return
 	}
-	_ = harness.RunCommandStdin(manifest, "kubectl", "delete", "-f", "-",
-		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
-	)
+	_ = harness.DeleteManifest("", manifest)
 }
 
 func (w *CustomWorkloads) renderManifest() (string, error) {

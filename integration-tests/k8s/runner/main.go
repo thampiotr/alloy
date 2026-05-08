@@ -15,12 +15,7 @@ import (
 )
 
 const (
-	clusterName        = "alloy-k8s-integration"
-	kubeconfigEnv      = "ALLOY_TESTS_KUBECONFIG"
-	managedEnv         = "ALLOY_TESTS_MANAGED_CLUSTER"
-	alloyImageEnv      = "ALLOY_TESTS_IMAGE"
-	kindClusterNameEnv = "ALLOY_TESTS_KIND_CLUSTER"
-
+	clusterName  = "alloy-k8s-integration"
 	promGenImage = "prom-gen:latest"
 )
 
@@ -213,16 +208,16 @@ func configureEnvVariables(cfg config) error {
 		return fmt.Errorf("kind get kubeconfig: %w", err)
 	}
 
-	if err := os.Setenv(managedEnv, "1"); err != nil {
+	if err := os.Setenv(harness.ManagedClusterEnv, "1"); err != nil {
 		return err
 	}
-	if err := os.Setenv(kubeconfigEnv, cfg.kubeconfig); err != nil {
+	if err := os.Setenv(harness.KubeconfigEnv, cfg.kubeconfig); err != nil {
 		return err
 	}
-	if err := os.Setenv(alloyImageEnv, cfg.alloyImage); err != nil {
+	if err := os.Setenv(harness.AlloyImageEnv, cfg.alloyImage); err != nil {
 		return err
 	}
-	return os.Setenv(kindClusterNameEnv, clusterName)
+	return os.Setenv(harness.KindClusterEnv, clusterName)
 }
 
 // loadImages loads the Alloy image (the artifact under test) and the test

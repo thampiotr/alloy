@@ -44,7 +44,7 @@ func (n *Namespace) Install(ctx *harness.TestContext) error {
 		return fmt.Errorf("namespace name is required")
 	}
 	manifest := buildNamespaceManifest(n.opts.Name, n.opts.Labels)
-	if err := harness.RunCommandStdin(manifest, "kubectl", "apply", "-f", "-"); err != nil {
+	if err := harness.ApplyManifest("", manifest); err != nil {
 		return fmt.Errorf("apply namespace %q: %w", n.opts.Name, err)
 	}
 	ctx.AddDiagnosticHook("namespace "+n.opts.Name, n.diagnosticsHook())

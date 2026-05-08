@@ -72,9 +72,7 @@ func (m *Mimir) Install(ctx *harness.TestContext) error {
 	}
 
 	if err := util.Step("apply mimir manifest", func() error {
-		return harness.RunCommandStdin(mimirManifest,
-			"kubectl", "apply", "--namespace", m.namespace, "-f", "-",
-		)
+		return harness.ApplyManifest(m.namespace, mimirManifest)
 	}); err != nil {
 		return err
 	}
@@ -104,10 +102,7 @@ func (m *Mimir) Cleanup() {
 	if !m.installed || m.namespace == "" {
 		return
 	}
-	_ = harness.RunCommandStdin(mimirManifest,
-		"kubectl", "delete", "--namespace", m.namespace, "-f", "-",
-		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
-	)
+	_ = harness.DeleteManifest(m.namespace, mimirManifest)
 }
 
 // QueryMetrics polls Mimir for series labelled with alloy_test_name=testName

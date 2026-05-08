@@ -31,5 +31,5 @@ func collectFailureDiagnostics(ctx *TestContext) {
 	if ctx.pkgPath != "" {
 		util.Logf("repro: make integration-test-k8s RUN_ARGS='--package ./%s'", ctx.pkgPath)
 	}
-	util.Logf("kubeconfig: %s", os.Getenv(kubeconfigEnv))
+	util.Logf("kubeconfig: %s", os.Getenv(KubeconfigEnv))
 }

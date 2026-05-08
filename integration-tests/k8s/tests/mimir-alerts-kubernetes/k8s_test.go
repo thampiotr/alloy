@@ -34,7 +34,7 @@ func TestMimirAlerts(t *testing.T) {
 	})
 
 	t.Run("Deleted Config works", func(t *testing.T) {
-		require.NoError(t, harness.Kubectl("delete", "alertmanagerconfig", "alertmgr-config2", "--namespace", ns.Name()))
+		require.NoError(t, harness.RunCommand("kubectl", "delete", "alertmanagerconfig", "alertmgr-config2", "--namespace", ns.Name()))
 
 		// Mimir's config should now omit the deleted Alertmanagerconfig CRD.
 		mimir.CheckAlertsConfig(t, "./expected/expected_2.yml")

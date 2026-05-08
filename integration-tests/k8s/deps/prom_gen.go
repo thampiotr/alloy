@@ -40,9 +40,7 @@ func (p *PromGen) Install(_ *harness.TestContext) error {
 		return fmt.Errorf("prom-gen namespace is required")
 	}
 	if err := util.Step("apply prom-gen manifest", func() error {
-		return harness.RunCommandStdin(promGenManifest,
-			"kubectl", "apply", "--namespace", p.opts.Namespace, "-f", "-",
-		)
+		return harness.ApplyManifest(p.opts.Namespace, promGenManifest)
 	}); err != nil {
 		return err
 	}
@@ -56,8 +54,5 @@ func (p *PromGen) Cleanup() {
 	if !p.installed {
 		return
 	}
-	_ = harness.RunCommandStdin(promGenManifest,
-		"kubectl", "delete", "--namespace", p.opts.Namespace, "-f", "-",
-		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
-	)
+	_ = harness.DeleteManifest(p.opts.Namespace, promGenManifest)
 }

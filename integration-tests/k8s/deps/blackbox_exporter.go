@@ -44,9 +44,7 @@ func (b *BlackboxExporter) Install(ctx *harness.TestContext) error {
 		return err
 	}
 	if err := util.Step("apply blackbox-exporter manifest", func() error {
-		return harness.RunCommandStdin(blackboxExporterManifest,
-			"kubectl", "apply", "--namespace", b.opts.Namespace, "-f", "-",
-		)
+		return harness.ApplyManifest(b.opts.Namespace, blackboxExporterManifest)
 	}); err != nil {
 		return err
 	}
@@ -60,8 +58,5 @@ func (b *BlackboxExporter) Cleanup() {
 	if !b.installed {
 		return
 	}
-	_ = harness.RunCommandStdin(blackboxExporterManifest,
-		"kubectl", "delete", "--namespace", b.opts.Namespace, "-f", "-",
-		"--ignore-not-found=true", "--wait=true", "--timeout=10m",
-	)
+	_ = harness.DeleteManifest(b.opts.Namespace, blackboxExporterManifest)
 }
