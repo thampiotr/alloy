@@ -1,0 +1,7 @@
+module pipeline-research
+
+go 1.25
+
+require github.com/prometheus/common v0.0.0
+
+replace github.com/prometheus/common => ./prometheus-common
