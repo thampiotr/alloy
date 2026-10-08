@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 10 |
-| Open | 1 |
-| Track A, pending | 9 |
+| Open | 2 |
+| Track A, pending | 8 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -106,7 +106,10 @@ Done so far:
 | `loki-enrich` | `loki-enrich` | pipeline | #7299 |
 | `loki-api` | `loki-source-api` | k8s | #7312 |
 
-Open: `scrape-prom-metrics`, folded into `otlp-metadata` renamed to `prometheus-write-paths`, in #7300.
+Open:
+
+- `scrape-prom-metrics`, folded into `otlp-metadata` renamed to `prometheus-write-paths`, in #7300.
+- `loki-file-compression`, moved to unit tests in `loki.source.file`'s `TestEncoding`, in #7333.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -153,7 +156,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | --- | --- | --- | --- | --- | --- |
 | A1 | `static` | Prometheus receiver, assertions, and the real HTTP service in the harness. | small | done | **merged, #6959** |
 | A2 | `loki-file` | **Moved to track B.** See B0. | small | done | **merged, #7187** |
-| A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | no |
+| A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | **open, #7333** |
 | A4 | `loki-enrich` | None. `loki.enrich` fed from `inputs.loki`. See notes B and M. | small | done | **merged, #7299** |
 | A5 | `scrape-prom-metrics` | **Moved to track B.** See B14 and note C. | small | done | **open, #7300** |
 | A6 | `prom-enrich` | C1. The last Docker test using `prom-gen`. See note M. | medium | done | no |
@@ -275,6 +278,13 @@ component. Later runs reuse the build cache and take seconds.
 ## Before handing over for human review
 
 Do this while the PR is still a draft, so the first thing a human sees is already clean.
+
+**This is the agreed way of working.** Once the draft PR is open, the agent runs the whole loop
+without waiting to be asked. It posts the Bugbot trigger, waits for the review, verifies every
+finding, and fixes the real ones. It comes back to the human only for judgement calls: a finding
+where both answers are defensible, a fix that would change the PR's scope, or a rejection the human
+should know about. A full report goes to the human at the end. The trigger comment is the one
+GitHub post the agent makes; review replies and every other comment stay human-owned.
 
 1. Open the PR as a **draft**.
 2. Request a **Cursor Bugbot** review first, by posting the bare trigger:
@@ -444,15 +454,24 @@ developer's own operating system, so the list would differ between a Mac laptop 
 container pins the kernel and the OS. Re-validate the list against a kind node before you trust the
 result. This step carries the highest flake risk in the plan.
 
-**L. `loki-file-compression` belongs in unit tests, not either suite.** The existing unit matrix at
-`file_test.go:455-500` is already 28 cases: `{CRLF, LF}` x `{default, UTF-8, UTF-16, UTF-16LE,
-UTF-16BE, UTF-16LE+BOM, UTF-16BE+BOM}` x `{plain, gzipped}`, with fixtures under
-`testdata/encoding/`. It asserts decoded content, which the Docker test never did. The Docker test
-adds only two things: the `z` format, which no unit test covers at all, and `bz2` or `z` combined
-with UTF-16, which the matrix does not cross. Decompression is pure data transformation with no
-orchestration or deployment dimension, so extend the table with `.z` and `.bz2` fixtures and delete
-the Docker test. That takes 28 cases to roughly 56, running in milliseconds, in place of a
+**L. `loki-file-compression` belongs in unit tests, not either suite.** The Docker test read gz, z and
+bz2 files, some of them UTF-16, and only counted entries. It never set `encoding` and never checked
+the decoded content. Existing coverage was wider than the first audit found:
+
+- gz with every encoding: `TestEncoding` in `file_test.go`, asserting decoded lines.
+- z with UTF-8, UTF-16 BE and UTF-16 LE: `compressionTest` in `internal/tail/file_test.go`, at the
+  tailer level. The first version of this note said z had no unit test. That was wrong: the audit
+  only looked at the component package, not `internal/tail`.
+- bz2 with UTF-8: `tailer_test.go`.
+
+The real gaps were bz2 with UTF-16, and z and bz2 through the component's `decompression` block.
+Decompression is pure data transformation with no orchestration or deployment dimension, so #7333
+runs every `TestEncoding` case uncompressed and with gz, z and bz2, adding `.z` and `.bz2` fixtures
+under `testdata/encoding/`. That takes 28 cases to 56, running in milliseconds, in place of a
 900-entry container test.
+
+Lesson for later audits: search the component's `internal/` packages too, not just its top-level
+tests.
 
 **M. Both enrich components already have behavioural unit tests.** `loki/enrich` has `TestEnricher`
 and `TestUpdate`. `prometheus/enrich` has `TestEnricher`, `TestValidate` and
