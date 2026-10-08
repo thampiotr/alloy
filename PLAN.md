@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 12 |
-| Open | 0 |
-| Track A, pending | 8 |
+| Open | 1 |
+| Track A, pending | 7 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -108,7 +108,7 @@ Done so far:
 | `scrape-prom-metrics` | `prometheus-write-paths`, extending `otlp-metadata` | k8s | #7300 |
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 
-Nothing is open.
+Open: `blackbox`, moved to the `prometheus-exporter-blackbox` pipeline test with C5, in #7339.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -123,7 +123,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. | A9 `loki-heroku`, if the HTTP push receivers stay in track A. See note N. |
 | C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. | A11 `loki-gelf` |
-| C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. | A13 `blackbox` |
+| C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. A14 will likely need dynamic bodies, since the Docker logpull mock generates timestamps relative to now. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
 
 Already landed:
@@ -165,7 +165,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A10 | `loki-firehose` | C3, or move to track B like A8. See note N. | small | done | no |
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
-| A13 | `blackbox` | C5. See note O. | medium | done | no |
+| A13 | `blackbox` | C5. See note O. | medium | done | **open, #7339** |
 | A14 | `loki-cloudflare` | None. Reuses C5. See note N. | small | done | no |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
@@ -501,6 +501,13 @@ stay in track A either way.
 `TestConvertConfig`. Nothing verifies that probing an endpoint produces probe metrics. The Docker
 test is the only coverage of that, so A13 is a real conversion rather than a duplicate, and it is
 the highest-value row in track A.
+
+The Docker test also never proved a probe succeeded. Its `scrape_timeout = "500ms"` equals the
+exporter's default `probe_timeout_offset`, and the probe gets the scrape timeout minus the offset, so
+every probe failed with status 0. `MimirMetricsTest` only checks names and non-empty values, so it
+passed anyway. #7339 uses a 1s scrape timeout and asserts `probe_success` and the status code for a
+healthy route and a 500 route. This is item 3 of the definition of done again: check what the helper
+actually proves, not just what it lists.
 
 **P. Filter log assertions server-side.** `loki.QueryLogs` fetches everything for a test name with
 `limit: 1000`, newest first, then filters client-side. Components that emit continuously push early
