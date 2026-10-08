@@ -79,13 +79,13 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 23
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 21
 on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 10 |
-| Open | 2 |
+| Done | 12 |
+| Open | 0 |
 | Track A, pending | 8 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
@@ -105,11 +105,10 @@ Done so far:
 | `prom-metadata` | `prometheus-remote-write-v2-metadata` | pipeline | #7225 |
 | `loki-enrich` | `loki-enrich` | pipeline | #7299 |
 | `loki-api` | `loki-source-api` | k8s | #7312 |
+| `scrape-prom-metrics` | `prometheus-write-paths`, extending `otlp-metadata` | k8s | #7300 |
+| `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 
-Open:
-
-- `scrape-prom-metrics`, folded into `otlp-metadata` renamed to `prometheus-write-paths`, in #7300.
-- `loki-file-compression`, moved to unit tests in `loki.source.file`'s `TestEncoding`, in #7333.
+Nothing is open.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -156,9 +155,9 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | --- | --- | --- | --- | --- | --- |
 | A1 | `static` | Prometheus receiver, assertions, and the real HTTP service in the harness. | small | done | **merged, #6959** |
 | A2 | `loki-file` | **Moved to track B.** See B0. | small | done | **merged, #7187** |
-| A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | **open, #7333** |
+| A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | **merged, #7333** |
 | A4 | `loki-enrich` | None. `loki.enrich` fed from `inputs.loki`. See notes B and M. | small | done | **merged, #7299** |
-| A5 | `scrape-prom-metrics` | **Moved to track B.** See B14 and note C. | small | done | **open, #7300** |
+| A5 | `scrape-prom-metrics` | **Moved to track B.** See B14 and note C. | small | done | **merged, #7300** |
 | A6 | `prom-enrich` | C1. The last Docker test using `prom-gen`. See note M. | medium | done | no |
 | A7 | `prom-metadata` | C2. | medium | done | **merged, #7225** |
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
@@ -190,7 +189,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | no |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
 | B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | no |
-| B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **open, #7300** |
+| B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **merged, #7300** |
 | B15 | `loki-api` | A push receiver exposed through a Service via `alloy.extraPorts`. The intake itself is unit-tested. | `ForwardPorts` on the Alloy dep, and `loki.QueryLabelsNotIndexed`. | medium | **merged, #7312** |
 
 ## Track C: stay on Docker
@@ -552,7 +551,7 @@ The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir`, `prom-gen`,
 `tempo`. `redis`, `mysql` and `postgres` have already gone with their tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
-directories: `prom-gen`, whose last user is `prom-enrich` once #7300 merges, `snmp-simulator`,
+directories: `prom-gen`, whose last user is `prom-enrich`, `snmp-simulator`,
 `kafka` and `kafka-gen`.
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
