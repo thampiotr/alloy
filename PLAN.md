@@ -79,14 +79,14 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 21
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 20
 on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 12 |
+| Done | 13 |
 | Open | 1 |
-| Track A, pending | 7 |
+| Track A, pending | 6 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -107,8 +107,9 @@ Done so far:
 | `loki-api` | `loki-source-api` | k8s | #7312 |
 | `scrape-prom-metrics` | `prometheus-write-paths`, extending `otlp-metadata` | k8s | #7300 |
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
+| `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
 
-Open: `blackbox`, moved to the `prometheus-exporter-blackbox` pipeline test with C5, in #7339.
+Open: `loki-cloudflare`, moved to unit tests of the real Logpull client, in #7343. See note R.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -123,7 +124,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. | A9 `loki-heroku`, if the HTTP push receivers stay in track A. See note N. |
 | C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. | A11 `loki-gelf` |
-| C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. A14 will likely need dynamic bodies, since the Docker logpull mock generates timestamps relative to now. | A13 `blackbox` |
+| C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
 
 Already landed:
@@ -165,8 +166,8 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A10 | `loki-firehose` | C3, or move to track B like A8. See note N. | small | done | no |
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
-| A13 | `blackbox` | C5. See note O. | medium | done | **open, #7339** |
-| A14 | `loki-cloudflare` | None. Reuses C5. See note N. | small | done | no |
+| A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
+| A14 | `loki-cloudflare` | **Moved to unit tests.** See note R. | small | done | **open, #7343** |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
 ## Track B: move to a k8s integration test
@@ -533,6 +534,18 @@ and `loadImages` both hardcode `[]string{cfg.alloyImage, promGenImage}`), and a 
 `deps/prom_gen.go` with `OTEL_EXPORTER_ENDPOINT` in its manifest. B11 needs it too, so B10 pays for
 all three.
 
+**R. `loki-cloudflare` belongs in unit tests.** The first audit counted seven test functions and
+assumed the intake was covered, but every `tailer_test.go` test replaces `getClient` with a fake. The
+real `cloudflare-go` client, meaning the request path, auth, query parameters and NDJSON and gzip
+decoding, was only covered by the Docker test. A pipeline test could reach it only through
+`ALLOY_CLOUDFLARE_API_URL`, a test-only override that no user would set, so the schema would have
+needed an `env` capability for a non-user feature. A unit test with `t.Setenv` and an `httptest`
+server is cheaper and asserts more. C5 therefore has no migration consumer beyond A13, which is fine:
+it is product surface on its own.
+
+Lesson for later audits: a test count says nothing about what is faked. Check whether the unit
+tests reach the real client or a test double.
+
 ## Follow-ups
 
 Found while doing this work. None belong inside a test migration, so each wants its own pull
@@ -563,7 +576,7 @@ directories: `prom-gen`, whose last user is `prom-enrich`, `snmp-simulator`,
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
-The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by C5.
+The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by an `httptest` stub in a unit test. See note R.
 
 ## Risk to watch
 
