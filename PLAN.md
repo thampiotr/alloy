@@ -109,7 +109,7 @@ Done so far:
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 | `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
 
-Open: `loki-cloudflare`, moved to a component-level unit test, in #7343. See note R.
+Open: `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343, on top of the `api_url` feature in #7353. See note R.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -167,7 +167,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
-| A14 | `loki-cloudflare` | **Moved to a component-level unit test.** See note R. | small | done | **open, #7343** |
+| A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **open, #7343 and #7353** |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
 ## Track B: move to a k8s integration test
@@ -350,7 +350,8 @@ Three things to get right when translating:
 
 - **Prefer `contains` over `count`** when a component emits repeatedly. A 1s scrape interval over the
   assertion window produces several rounds of samples, so counts are flaky.
-- **Add an unmatched total `count`** when the input is fixed. Label-scoped counts cannot see entries
+- **Add an unmatched total `count`** when the input is fixed. Until the settle follow-up lands, it
+  catches missing entries but not late duplicates, so keep the input deterministic. Label-scoped counts cannot see entries
   emitted under any other label set, so a component that duplicated or rewrote an entry would still
   pass.
 - **Use fixed timestamps.** The Docker tests generate `time.Now()` values because Loki rejects
@@ -534,25 +535,28 @@ and `loadImages` both hardcode `[]string{cfg.alloyImage, promGenImage}`), and a 
 `deps/prom_gen.go` with `OTEL_EXPORTER_ENDPOINT` in its manifest. B11 needs it too, so B10 pays for
 all three.
 
-**R. `loki-cloudflare` belongs in a component-level unit test.** The first audit counted seven test
+**R. `loki-cloudflare` needed a real `api_url` argument.** The first audit counted seven test
 functions and assumed the intake was covered, but every `tailer_test.go` test replaces `getClient`
-with a fake, and none builds the component. A pipeline test could reach the real client only through
-`ALLOY_CLOUDFLARE_API_URL`, a test-only override no user would set. That would need an `env`
-capability for a non-user feature, or a process-wide environment variable in the shared runtime.
+with a fake, and none builds the component. The component's only URL override was
+`ALLOY_CLOUDFLARE_API_URL`, an undocumented environment variable that #6089 added just for the Docker
+test. A pipeline test could not set it, and the variable is process-wide and ignores config
+reloads.
 
-The first version of #7343 tested only the client. Review (Piotr, Kalle) pointed out that it left
-the component itself untested. The fix is `TestComponent`, which runs the whole component through
-`componenttest`, with `t.Setenv` and an `httptest` stub of the Logpull API. It asserts entries,
-labels, timestamps, the request, the pull window and the stored cursor. Client-level tests belong
-to #7317, which rewrites the client, so #7343 adds none, to avoid overlapping it.
+#7343 went through three shapes. A client-only test left the component untested. A `componenttest`
+test fixed that but still needed the variable. Review (Piotr, Kalle) settled on the third: #7353
+adds `api_url` as a documented argument that applies on reload, and removes the variable, along with
+`TestComponent` for the request, window, cursor and reload. #7343 then becomes a plain YAML test with
+`mocks.http`. Client-level tests are left to #7317, which rewrites the client and will need
+rebasing onto `api_url`.
 
 Lessons for later audits:
 
 - A test count says nothing about what is faked. Check whether unit tests reach the real client or
   a test double.
+- A test-only hook, such as an environment variable or a package-level variable swapped in tests,
+  is often a missing user-facing argument. Ask whether users would want it before working around it.
 - When a Docker test is replaced by a unit test, the replacement should still run the full
-  component, as `componenttest` allows. Testing only a layer below the component loses the wiring
-  the Docker test covered.
+  component, as `componenttest` allows.
 - Check open PRs touching the same component before adding tests to it.
 
 ## Follow-ups
@@ -569,6 +573,7 @@ request.
 | Let the assertion helpers take a callback | `QueryHistograms` already takes `func(c *assert.CollectT, sample HistogramSample)` and that shape has proved much better: the caller decides what to check, and the helper only owns the query and the retry. The others bake their checks in, which is why `QueryPositive` cannot express "this metric is legitimately zero" and why `redis` needed two different metric lists. Give the sample, metadata and log helpers the same treatment, keeping the current fixed-assertion forms as thin wrappers where they read well. | medium |
 
 | Fail loudly on unhealthy components in the pipeline harness | `harness.NewAlloy` waits for load but never checks component health, so a component that cannot bind its port shows up as an assertion timeout rather than its real error. See note A. | small |
+| Make `count` assertions settle in the pipeline harness | `Alloy.Assert` returns on the first poll where every assertion passes, so a `count` passes on its way up and later duplicates go unseen. With `workers = 3`, `loki-source-cloudflare` ends with 9 entries but `count: 3` passes. This undercuts the \"add an unmatched total count\" advice in the translation checklist. Once all assertions pass, keep re-checking for a short settle window and fail if any stops passing. | small |
 | Bound the HTTP client in `loki-source-api`'s push helpers | `pushJSON` and `pushProto` use `http.Post` and `http.DefaultClient`, which have no timeout, so a stalled port-forward hangs until the test timeout. `graphql` already uses a 5s client. | small |
 
 The two `Query*` items are related and worth doing together, since renaming and re-shaping the same
@@ -585,7 +590,7 @@ directories: `prom-gen`, whose last user is `prom-enrich`, `snmp-simulator`,
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
-The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by an `httptest` stub in `TestComponent`. See note R.
+The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by a `mocks.http` stub. See note R.
 
 ## Risk to watch
 
