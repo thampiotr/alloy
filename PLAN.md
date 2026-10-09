@@ -109,7 +109,7 @@ Done so far:
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 | `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
 
-Open: `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343, on top of the `api_url` feature in #7353. See note R.
+Open: `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343. It uses the `api_url` argument added in #7353, which is merged. See note R.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -167,7 +167,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
-| A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **open, #7343 and #7353** |
+| A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **open, #7343** (`api_url` merged in #7353) |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
 ## Track B: move to a k8s integration test
