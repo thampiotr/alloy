@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 13 |
-| Open | 1 |
-| Track A, pending | 6 |
+| Open | 2 |
+| Track A, pending | 5 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -109,7 +109,12 @@ Done so far:
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 | `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
 
-Open: `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343. It uses the `api_url` argument added in #7353, which is merged. See note R.
+Open:
+
+- `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343. It uses the
+  `api_url` argument added in #7353, which is merged. See note R.
+- `prom-enrich`, moved to the `prometheus-enrich` pipeline test in #7355. See note S. The `prom-gen`
+  fixture moves to the k8s suite in #7356.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -120,7 +125,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 
 | ID | Capability | First needed by |
 | --- | --- | --- |
-| C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. | A6 `prom-enrich` |
+| C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. **Not needed by A6**, see note S. No migration needs it now; build it when a test or a user does. | none |
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. | A9 `loki-heroku`, if the HTTP push receivers stay in track A. See note N. |
 | C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. | A11 `loki-gelf` |
@@ -159,7 +164,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | **merged, #7333** |
 | A4 | `loki-enrich` | None. `loki.enrich` fed from `inputs.loki`. See notes B and M. | small | done | **merged, #7299** |
 | A5 | `scrape-prom-metrics` | **Moved to track B.** See B14 and note C. | small | done | **merged, #7300** |
-| A6 | `prom-enrich` | C1. The last Docker test using `prom-gen`. See note M. | medium | done | no |
+| A6 | `prom-enrich` | None. `prometheus.exporter.static` and a scrape, not C1. See notes M and S. | small | done | **open, #7355** |
 | A7 | `prom-metadata` | C2. | medium | done | **merged, #7225** |
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3, or move to track B like A8. See note N. | small | done | no |
@@ -559,6 +564,16 @@ Lessons for later audits:
   component, as `componenttest` allows.
 - Check open PRs touching the same component before adding tests to it.
 
+**S. `prom-enrich` needed no new capability.** The plan had A6 paying for C1 `inputs.prometheus`.
+Two `prometheus.exporter.static` components and a scrape produce the same composition: scraped
+series carry the exporter's component ID as `instance`, so one exporter matches an enrich target and
+the other does not. The enrich targets are inlined instead of read through `discovery.file`. This
+also covers more than C1 would have. The scrape sends metadata with `honor_metadata = true`, and the
+sink keys metadata by the full label set, so the test proves enrich's metadata hook applies the
+enrichment. `TestEnricher` only drives the float `Append` path.
+
+Lesson: before building a capability, check whether existing components already express the input.
+
 ## Follow-ups
 
 Found while doing this work. None belong inside a test migration, so each wants its own pull
@@ -585,8 +600,14 @@ The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir`, `prom-gen`,
 `tempo`. `redis`, `mysql` and `postgres` have already gone with their tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
-directories: `prom-gen`, whose last user is `prom-enrich`, `snmp-simulator`,
-`kafka` and `kafka-gen`.
+directories: `snmp-simulator`, `kafka` and `kafka-gen`.
+
+`prom-gen` is different. #7355 deletes its compose service, because `prom-enrich` was its last Docker
+consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` and
+`prometheus-operator` use it through `deps.PromGen`, and the k8s runner and workflow build it with
+`make prom-gen-image`. #7356 moves its source from `integration-tests/docker/configs/prom-gen` to
+`integration-tests/k8s/fixtures/prom-gen`. The first version of this section said to delete it; a
+repo-wide search before deleting caught that. `otel-gen` will likely follow the same path with B10.
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
