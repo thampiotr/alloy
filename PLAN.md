@@ -109,7 +109,7 @@ Done so far:
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 | `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
 
-Open: `loki-cloudflare`, moved to unit tests of the real Logpull client, in #7343. See note R.
+Open: `loki-cloudflare`, moved to a component-level unit test, in #7343. See note R.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -167,7 +167,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
-| A14 | `loki-cloudflare` | **Moved to unit tests.** See note R. | small | done | **open, #7343** |
+| A14 | `loki-cloudflare` | **Moved to a component-level unit test.** See note R. | small | done | **open, #7343** |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
 ## Track B: move to a k8s integration test
@@ -534,17 +534,26 @@ and `loadImages` both hardcode `[]string{cfg.alloyImage, promGenImage}`), and a 
 `deps/prom_gen.go` with `OTEL_EXPORTER_ENDPOINT` in its manifest. B11 needs it too, so B10 pays for
 all three.
 
-**R. `loki-cloudflare` belongs in unit tests.** The first audit counted seven test functions and
-assumed the intake was covered, but every `tailer_test.go` test replaces `getClient` with a fake. The
-real `cloudflare-go` client, meaning the request path, auth, query parameters and NDJSON and gzip
-decoding, was only covered by the Docker test. A pipeline test could reach it only through
-`ALLOY_CLOUDFLARE_API_URL`, a test-only override that no user would set, so the schema would have
-needed an `env` capability for a non-user feature. A unit test with `t.Setenv` and an `httptest`
-server is cheaper and asserts more. C5 therefore has no migration consumer beyond A13, which is fine:
-it is product surface on its own.
+**R. `loki-cloudflare` belongs in a component-level unit test.** The first audit counted seven test
+functions and assumed the intake was covered, but every `tailer_test.go` test replaces `getClient`
+with a fake, and none builds the component. A pipeline test could reach the real client only through
+`ALLOY_CLOUDFLARE_API_URL`, a test-only override no user would set. That would need an `env`
+capability for a non-user feature, or a process-wide environment variable in the shared runtime.
 
-Lesson for later audits: a test count says nothing about what is faked. Check whether the unit
-tests reach the real client or a test double.
+The first version of #7343 tested only the client. Review (Piotr, Kalle) pointed out that it left
+the component itself untested. The fix is `TestComponent`, which runs the whole component through
+`componenttest`, with `t.Setenv` and an `httptest` stub of the Logpull API. It asserts entries,
+labels, timestamps, the request, the pull window and the stored cursor. Client-level tests belong
+to #7317, which rewrites the client, so #7343 adds none, to avoid overlapping it.
+
+Lessons for later audits:
+
+- A test count says nothing about what is faked. Check whether unit tests reach the real client or
+  a test double.
+- When a Docker test is replaced by a unit test, the replacement should still run the full
+  component, as `componenttest` allows. Testing only a layer below the component loses the wiring
+  the Docker test covered.
+- Check open PRs touching the same component before adding tests to it.
 
 ## Follow-ups
 
@@ -576,7 +585,7 @@ directories: `prom-gen`, whose last user is `prom-enrich`, `snmp-simulator`,
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
-The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by an `httptest` stub in a unit test. See note R.
+The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, replaced by an `httptest` stub in `TestComponent`. See note R.
 
 ## Risk to watch
 
