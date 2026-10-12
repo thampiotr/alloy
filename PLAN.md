@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 13 |
-| Open | 2 |
-| Track A, pending | 5 |
+| Open | 3 |
+| Track A, pending | 4 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -114,7 +114,8 @@ Open:
 - `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343. It uses the
   `api_url` argument added in #7353, which is merged. See note R.
 - `prom-enrich`, moved to the `prometheus-enrich` pipeline test in #7355. See note S. The `prom-gen`
-  fixture moves to the k8s suite in #7356.
+  fixture moved to the k8s suite in #7356, which is merged.
+- `loki-heroku`, moved to the `loki-source-heroku` pipeline test with C3 in #7365.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -127,7 +128,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | --- | --- | --- |
 | C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. **Not needed by A6**, see note S. No migration needs it now; build it when a test or a user does. | none |
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
-| C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. | A9 `loki-heroku`, if the HTTP push receivers stay in track A. See note N. |
+| C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. **Done in #7365:** requests sent in order with `method`, `headers`, `body` and `expected_status`, retried while the listener is not up yet. | A9 `loki-heroku` |
 | C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. | A11 `loki-gelf` |
 | C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
@@ -167,8 +168,8 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A6 | `prom-enrich` | None. `prometheus.exporter.static` and a scrape, not C1. See notes M and S. | small | done | **open, #7355** |
 | A7 | `prom-metadata` | C2. | medium | done | **merged, #7225** |
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
-| A9 | `loki-heroku` | C3, or move to track B like A8. See note N. | small | done | no |
-| A10 | `loki-firehose` | C3, or move to track B like A8. See note N. | small | done | no |
+| A9 | `loki-heroku` | C3. See note N. | small | done | **open, #7365** |
+| A10 | `loki-firehose` | Reuses C3. See note N. | small | done | no |
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
@@ -495,13 +496,14 @@ their place on composition, not intake: structured metadata surviving to the wri
 must not be indexed. If a converted test asserts nothing beyond what the unit test does, delete the
 Docker test instead of converting it.
 
-**Open decision.** `loki-api` went to k8s instead (#7312), justified by the deployed path: a push
-receiver exposed through a Service via `alloy.extraPorts`. With `ForwardPorts` and
-`loki.QueryLabelsNotIndexed` in place, `loki-heroku`, `loki-firehose` and the push half of
-`loki-gcplog` can follow the same route cheaply. If they do, C3 `inputs.http` loses its only
-migration consumers, so decide which route they take before starting A9. `loki-gelf` and
-`loki-syslog` are unaffected: they listen on UDP, which `kubectl port-forward` cannot carry, so they
-stay in track A either way.
+**Decided: the HTTP push receivers become pipeline tests with C3.** `loki-api` went to k8s (#7312),
+justified by the deployed path through a Service. For `loki-heroku`, `loki-firehose` and the push
+half of `loki-gcplog`, the unit tests already build the component and send it real requests
+(`TestPush`, `TestComponent`). What the Docker tests add is the composition: `relabel_rules`,
+structured metadata and dropped labels. That is Alloy's own output, so by triage question 2 it is a
+pipeline test, and the k8s route would only add CI load. A9 built C3 in #7365, and A10 reuses it.
+`loki-gelf` and `loki-syslog` were never affected: they listen on UDP, so they stay in track A
+with C4.
 
 **O. `blackbox` has no behavioural unit test.** `prometheus/exporter/blackbox` only has config tests:
 `TestUnmarshalAlloy`, `TestUnmarshalAlloyTargets`, `TestUnmarshalAlloyWithInlineConfig`,
