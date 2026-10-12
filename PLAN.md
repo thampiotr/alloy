@@ -355,8 +355,9 @@ Three things to get right when translating:
 
 - **Prefer `contains` over `count`** when a component emits repeatedly. A 1s scrape interval over the
   assertion window produces several rounds of samples, so counts are flaky.
-- **Add an unmatched total `count`** when the input is fixed. Until the settle follow-up lands, it
-  catches missing entries but not late duplicates, so keep the input deterministic. Label-scoped counts cannot see entries
+- **Add an unmatched total `count`** when the input is fixed. It catches missing entries. It does not
+  catch entries that arrive after it first passes, unless the test opts in to `hold_for` once that
+  follow-up exists. Label-scoped counts cannot see entries
   emitted under any other label set, so a component that duplicated or rewrote an entry would still
   pass.
 - **Use fixed timestamps.** The Docker tests generate `time.Now()` values because Loki rejects
@@ -588,7 +589,7 @@ request.
 | Let the assertion helpers take a callback | `QueryHistograms` already takes `func(c *assert.CollectT, sample HistogramSample)` and that shape has proved much better: the caller decides what to check, and the helper only owns the query and the retry. The others bake their checks in, which is why `QueryPositive` cannot express "this metric is legitimately zero" and why `redis` needed two different metric lists. Give the sample, metadata and log helpers the same treatment, keeping the current fixed-assertion forms as thin wrappers where they read well. | medium |
 
 | Fail loudly on unhealthy components in the pipeline harness | `harness.NewAlloy` waits for load but never checks component health, so a component that cannot bind its port shows up as an assertion timeout rather than its real error. See note A. | small |
-| Make `count` assertions settle in the pipeline harness | `Alloy.Assert` returns on the first poll where every assertion passes, so a `count` passes on its way up and later duplicates go unseen. With `workers = 3`, `loki-source-cloudflare` ends with 9 entries but `count: 3` passes. This undercuts the "add an unmatched total count" advice in the translation checklist. Once all assertions pass, keep re-checking for a short settle window and fail if any stops passing. | small |
+| Opt-in `hold_for` on pipeline test assertions | `Alloy.Assert` returns on the first poll where every assertion passes, so an exact `count` cannot see entries that arrive afterwards, such as a regression that sends duplicates. Add an optional `assert.hold_for` duration: once all assertions pass, they must keep passing for that long. Opt-in per test, not a default, so tests that do not need it stay fast. Low priority, agreed with Piotr: many regressions can slip through silently, and this closes only one of them. | small |
 | Bound the HTTP client in `loki-source-api`'s push helpers | `pushJSON` and `pushProto` use `http.Post` and `http.DefaultClient`, which have no timeout, so a stalled port-forward hangs until the test timeout. `graphql` already uses a 5s client. | small |
 
 The two `Query*` items are related and worth doing together, since renaming and re-shaping the same
