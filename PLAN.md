@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 13 |
-| Open | 3 |
-| Track A, pending | 4 |
+| Open | 4 |
+| Track A, pending | 3 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -116,6 +116,7 @@ Open:
 - `prom-enrich`, moved to the `prometheus-enrich` pipeline test in #7355. See note S. The `prom-gen`
   fixture moved to the k8s suite in #7356, which is merged.
 - `loki-heroku`, moved to the `loki-source-heroku` pipeline test with C3 in #7365.
+- `loki-firehose`, moved to the `loki-source-awsfirehose` pipeline test in #7391, stacked on #7365.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -169,7 +170,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A7 | `prom-metadata` | C2. | medium | done | **merged, #7225** |
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3. See note N. | small | done | **open, #7365** |
-| A10 | `loki-firehose` | Reuses C3. See note N. | small | done | no |
+| A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **open, #7391** |
 | A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
 | A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
@@ -592,6 +593,7 @@ request.
 
 | Fail loudly on unhealthy components in the pipeline harness | `harness.NewAlloy` waits for load but never checks component health, so a component that cannot bind its port shows up as an assertion timeout rather than its real error. See note A. | small |
 | Opt-in `hold_for` on pipeline test assertions | `Alloy.Assert` returns on the first poll where every assertion passes, so an exact `count` cannot see entries that arrive afterwards, such as a regression that sends duplicates. Add an optional `assert.hold_for` duration: once all assertions pass, they must keep passing for that long. Opt-in per test, not a default, so tests that do not need it stay fast. Low priority, agreed with Piotr: many regressions can slip through silently, and this closes only one of them. | small |
+| Reject unknown fields in pipeline test YAML | `TestPipelines` decodes `test.yaml` with plain `yaml.Unmarshal`, so a misspelled or unsupported field is silently ignored. On A10, a branch without `inputs.http` sent no requests and failed only as "0 entries" after the 30s timeout. Decode with `KnownFields(true)` so the test fails at once and names the field. | small |
 | Bound the HTTP client in `loki-source-api`'s push helpers | `pushJSON` and `pushProto` use `http.Post` and `http.DefaultClient`, which have no timeout, so a stalled port-forward hangs until the test timeout. `graphql` already uses a 5s client. | small |
 
 The two `Query*` items are related and worth doing together, since renaming and re-shaping the same
