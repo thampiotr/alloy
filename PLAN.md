@@ -79,13 +79,13 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 20
-on main today.
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 16
+on main today, 15 once #7480 merges.
 
 | State | Count |
 | --- | --- |
-| Done | 13 |
-| Open | 5 |
+| Done | 17 |
+| Open | 1 |
 | Track A, pending | 2 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
@@ -108,16 +108,12 @@ Done so far:
 | `scrape-prom-metrics` | `prometheus-write-paths`, extending `otlp-metadata` | k8s | #7300 |
 | `loki-file-compression` | `TestEncoding` in `loki.source.file` | unit | #7333 |
 | `blackbox` | `prometheus-exporter-blackbox` | pipeline | #7339 |
+| `loki-cloudflare` | `loki-source-cloudflare`, with the `api_url` argument from #7353 | pipeline | #7343 |
+| `prom-enrich` | `prometheus-enrich`; `prom-gen` moved to the k8s suite in #7356 | pipeline | #7355 |
+| `loki-heroku` | `loki-source-heroku` | pipeline | #7365 |
+| `loki-firehose` | `loki-source-awsfirehose` | pipeline | #7391 |
 
-Open:
-
-- `loki-cloudflare`, moved to the `loki-source-cloudflare` pipeline test in #7343. It uses the
-  `api_url` argument added in #7353, which is merged. See note R.
-- `prom-enrich`, moved to the `prometheus-enrich` pipeline test in #7355. See note S. The `prom-gen`
-  fixture moved to the k8s suite in #7356, which is merged.
-- `loki-heroku`, moved to the `loki-source-heroku` pipeline test with C3 in #7365.
-- `loki-firehose`, moved to the `loki-source-awsfirehose` pipeline test in #7391.
-- `loki-syslog`, moved to the `loki-source-syslog` pipeline test with C4 in #7480.
+Open: `loki-syslog`, moved to the `loki-source-syslog` pipeline test with C4 in #7480.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -167,15 +163,15 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A3 | `loki-file-compression` | **Moved to unit tests.** See note L. | small | done | **merged, #7333** |
 | A4 | `loki-enrich` | None. `loki.enrich` fed from `inputs.loki`. See notes B and M. | small | done | **merged, #7299** |
 | A5 | `scrape-prom-metrics` | **Moved to track B.** See B14 and note C. | small | done | **merged, #7300** |
-| A6 | `prom-enrich` | None. `prometheus.exporter.static` and a scrape, not C1. See notes M and S. | small | done | **open, #7355** |
+| A6 | `prom-enrich` | None. `prometheus.exporter.static` and a scrape, not C1. See notes M and S. | small | done | **merged, #7355** |
 | A7 | `prom-metadata` | C2. | medium | done | **merged, #7225** |
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
-| A9 | `loki-heroku` | C3. See note N. | small | done | **open, #7365** |
-| A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **open, #7391** |
+| A9 | `loki-heroku` | C3. See note N. | small | done | **merged, #7365** |
+| A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **merged, #7391** |
 | A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | no |
 | A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **open, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
-| A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **open, #7343** (`api_url` merged in #7353) |
+| A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **merged, #7343** (with #7353) |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
 
 ## Track B: move to a k8s integration test
