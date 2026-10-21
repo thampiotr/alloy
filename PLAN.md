@@ -85,8 +85,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 13 |
-| Open | 4 |
-| Track A, pending | 3 |
+| Open | 5 |
+| Track A, pending | 2 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -116,7 +116,8 @@ Open:
 - `prom-enrich`, moved to the `prometheus-enrich` pipeline test in #7355. See note S. The `prom-gen`
   fixture moved to the k8s suite in #7356, which is merged.
 - `loki-heroku`, moved to the `loki-source-heroku` pipeline test with C3 in #7365.
-- `loki-firehose`, moved to the `loki-source-awsfirehose` pipeline test in #7391, stacked on #7365.
+- `loki-firehose`, moved to the `loki-source-awsfirehose` pipeline test in #7391.
+- `loki-syslog`, moved to the `loki-source-syslog` pipeline test with C4 in #7480.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -130,7 +131,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. **Not needed by A6**, see note S. No migration needs it now; build it when a test or a user does. | none |
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. **Done in #7365:** requests sent in order with `method`, `headers`, `body` and `expected_status`, retried while the listener is not up yet. | A9 `loki-heroku` |
-| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. | A11 `loki-gelf` |
+| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. **Done in #7480:** `inputs.tcp` writes raw `data` over one connection, retrying the dial; `inputs.udp` sends each of `datagrams` as one packet with no readiness wait, which is safe because the UDP receivers bind while being built. A probe that binds the port was tried and dropped: it can make the component's own bind fail. | A12 `loki-syslog` |
 | C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
 
@@ -171,8 +172,8 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3. See note N. | small | done | **open, #7365** |
 | A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **open, #7391** |
-| A11 | `loki-gelf` | C4. See notes D and N. | medium | done | no |
-| A12 | `loki-syslog` | None. Reuses C4. See notes D, E and N. | small | done | no |
+| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | no |
+| A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **open, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
 | A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **open, #7343** (`api_url` merged in #7353) |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
