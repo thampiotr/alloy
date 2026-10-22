@@ -9,11 +9,10 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 Last refreshed 2026-10-22.
 
-- **Done:** 17 of 33 Docker tests have moved. Track A is all merged except A11, A12 and A15.
-- **Open:** A12 `loki-syslog` in #7480, which adds C4 (`inputs.tcp`, `inputs.udp`).
-- **Next:** A11 `loki-gelf` once #7480 merges, and A15 `loki-file-rotation`, which needs C6. Then
-  track B. See "Next up" below.
-- **Docker suite on main:** 16 tests, 15 once #7480 merges. Three stay on Docker (track C) and two
+- **Done:** 18 of 33 Docker tests have moved. Track A is all merged except A11 and A15.
+- **Open:** nothing.
+- **Next:** A11 `loki-gelf`, then A15 `loki-file-rotation`. Then track B. See "Next up" below.
+- **Docker suite on main:** 15 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -90,13 +89,13 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 16
-on main today, 15 once #7480 merges.
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 15
+on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 17 |
-| Open | 1 |
+| Done | 18 |
+| Open | 0 |
 | Track A, pending | 2 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
@@ -123,8 +122,9 @@ Done so far:
 | `prom-enrich` | `prometheus-enrich`; `prom-gen` moved to the k8s suite in #7356 | pipeline | #7355 |
 | `loki-heroku` | `loki-source-heroku` | pipeline | #7365 |
 | `loki-firehose` | `loki-source-awsfirehose` | pipeline | #7391 |
+| `loki-syslog` | `loki-source-syslog` | pipeline | #7480 |
 
-Open: `loki-syslog`, moved to the `loki-source-syslog` pipeline test with C4 in #7480.
+Nothing is open.
 
 ### Next up
 
@@ -132,7 +132,7 @@ In order. Each is one pull request.
 
 1. **A11 `loki-gelf`.** Pipeline test `loki-source-gelf`, sending GELF JSON datagrams with
    `inputs.udp` and `wait_for: loki.source.gelf.<label>`. Assert the relabeled GELF fields, `host` in
-   structured metadata and not indexed. Small, and blocked only on #7480 merging.
+   structured metadata and not indexed. Small, and unblocked now that #7480 is merged.
 2. **A15 `loki-file-rotation`.** The first use of C6, a Go-authored test beside the YAML runner that
    writes and rotates files in a temp directory while `loki.source.file` tails them, across the four
    rotation strategies. Audit first: the row is still `todo`. Self-contained, so a good one to hand
@@ -155,7 +155,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. **Not needed by A6**, see note S. No migration needs it now; build it when a test or a user does. | none |
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. **Done in #7365:** requests sent in order with `method`, `headers`, `body` and `expected_status`, retried while the listener is not up yet. | A9 `loki-heroku` |
-| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. **Open in #7480:** `inputs.tcp` writes raw `data` over one connection, retrying the dial. `inputs.udp` sends each of `datagrams` once, after a required `wait_for` component reports its listener as bound; the harness knows how per component type, from debug info, and rejects unknown types. Rejected: binding the port as a probe (can break the component's own bind) and ICMP port-unreachable (rate-limited on macOS). | A12 `loki-syslog` |
+| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. **Done in #7480:** `inputs.tcp` writes raw `data` over one connection, retrying the dial. `inputs.udp` sends each of `datagrams` once, after a required `wait_for` component reports its listener as bound; the harness knows how per component type, from debug info, and rejects unknown types. Rejected: binding the port as a probe (can break the component's own bind) and ICMP port-unreachable (rate-limited on macOS). | A12 `loki-syslog` |
 | C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
 
@@ -197,7 +197,7 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A9 | `loki-heroku` | C3. See note N. | small | done | **merged, #7365** |
 | A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **merged, #7391** |
 | A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | no |
-| A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **open, #7480** |
+| A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **merged, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
 | A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **merged, #7343** (with #7353) |
 | A15 | `loki-file-rotation` | C6. See note F. | medium | todo | no |
