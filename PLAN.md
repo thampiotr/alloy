@@ -5,6 +5,17 @@
 Move each test in `integration-tests/docker` to the level where it belongs, as defined in
 [docs/developer/writing-tests.md](docs/developer/writing-tests.md).
 
+## Status
+
+Last refreshed 2026-10-22.
+
+- **Done:** 17 of 33 Docker tests have moved. Track A is all merged except A11, A12 and A15.
+- **Open:** A12 `loki-syslog` in #7480, which adds C4 (`inputs.tcp`, `inputs.udp`).
+- **Next:** A11 `loki-gelf` once #7480 merges, and A15 `loki-file-rotation`, which needs C6. Then
+  track B. See "Next up" below.
+- **Docker suite on main:** 16 tests, 15 once #7480 merges. Three stay on Docker (track C) and two
+  wait on an eBPF decision (track D).
+
 ## The triage rule
 
 Answer three questions about each test, in order.
@@ -115,6 +126,23 @@ Done so far:
 
 Open: `loki-syslog`, moved to the `loki-source-syslog` pipeline test with C4 in #7480.
 
+### Next up
+
+In order. Each is one pull request.
+
+1. **A11 `loki-gelf`.** Pipeline test `loki-source-gelf`, sending GELF JSON datagrams with
+   `inputs.udp` and `wait_for: loki.source.gelf.<label>`. Assert the relabeled GELF fields, `host` in
+   structured metadata and not indexed. Small, and blocked only on #7480 merging.
+2. **A15 `loki-file-rotation`.** The first use of C6, a Go-authored test beside the YAML runner that
+   writes and rotates files in a temp directory while `loki.source.file` tails them, across the four
+   rotation strategies. Audit first: the row is still `todo`. Self-contained, so a good one to hand
+   over.
+3. **B10, then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need. See notes
+   I and Q.
+4. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
+   other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
+   pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
+
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
 ## Capabilities
@@ -127,7 +155,7 @@ are all user-facing features. C6 is the imperative escape hatch.
 | C1 | `inputs.prometheus`, feeding metric samples into a receiver. Mirrors `inputs.loki`. **Not needed by A6**, see note S. No migration needs it now; build it when a test or a user does. | none |
 | C2 | `assert.prometheus` metadata matching, for type, help and unit. **Done in #7225:** the sink keeps metadata and `match.metadata` asserts it. | A7 `prom-metadata` |
 | C3 | `inputs.http`, sending HTTP requests to a component's own listener. Covers `loki.source.api`, `loki.source.heroku`, `loki.source.awsfirehose`, `loki.source.gcplog` push, `prometheus.receive_http`, `faro.receiver` and OTLP over HTTP. Ports are hardcoded. See note A. **Done in #7365:** requests sent in order with `method`, `headers`, `body` and `expected_status`, retried while the listener is not up yet. | A9 `loki-heroku` |
-| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. **Done in #7480:** `inputs.tcp` writes raw `data` over one connection, retrying the dial. `inputs.udp` sends each of `datagrams` once, after a required `wait_for` component reports its listener as bound; the harness knows how per component type, from debug info, and rejects unknown types. Rejected: binding the port as a probe (can break the component's own bind) and ICMP port-unreachable (rate-limited on macOS). | A12 `loki-syslog` |
+| C4 | `inputs.tcp` and `inputs.udp`, sending raw bytes or lines to a listener. Covers `loki.source.syslog` and `loki.source.gelf`. **Open in #7480:** `inputs.tcp` writes raw `data` over one connection, retrying the dial. `inputs.udp` sends each of `datagrams` once, after a required `wait_for` component reports its listener as bound; the harness knows how per component type, from debug info, and rejects unknown types. Rejected: binding the port as a probe (can break the component's own bind) and ICMP port-unreachable (rate-limited on macOS). | A12 `loki-syslog` |
 | C5 | `mocks.http`, a stub upstream the config can point at, with canned responses per path. Covers any component that pulls from an HTTP API, and any component that probes an endpoint. **Done in #7339:** named mocks referenced as `pipelinetest.mocks.http.<name>.url`, routes matched on exact path and optional method, with `status`, `headers` and `body`. | A13 `blackbox` |
 | C6 | Imperative mode. A Go-authored entry point beside the YAML runner, for tests that must manipulate state while Alloy runs. `harness.NewAlloy` already exists, so this is mostly a runner and a convention. | A15 `loki-file-rotation` |
 
@@ -315,9 +343,12 @@ GitHub post the agent makes; review replies and every other comment stay human-o
    raise something real in the headline, so check both.
 4. **Verify each finding against the source before acting on it.** Most findings on these
    migrations were real: two coverage regressions, a dependency leak, an HTTP client with no timeout,
-   an unescaped LogQL selector and a Postgres readiness probe. Three were wrong, all confidently
-   worded and two marked high severity: `MYSQL_ROOT_HOST`, image digest pinning and a missing
-   `USE testdb`. Each was settled by reading the actual source, not by reasoning about it: the image
+   an unescaped LogQL selector, a Postgres readiness probe, and on #7480 a UDP race where the
+agent's own reading of `loki.source.syslog` was wrong: it binds listeners in `Run`, not while it is
+built. Four were wrong, all confidently
+   worded and two marked high severity: `MYSQL_ROOT_HOST`, image digest pinning, a missing
+   `USE testdb`, and on #7343 a claim that `cloudflare-go` sends Logpull times in seconds (it sends
+   `UnixNano()`). Each was settled by reading the actual source, not by reasoning about it: the image
    entrypoint via
    `docker run --rm --entrypoint sh <image> -c 'grep ... /usr/local/bin/docker-entrypoint.sh'`, and
    `.github/renovate.json5` for which managers exist. A passing test is corroboration, not proof, so
@@ -326,9 +357,13 @@ GitHub post the agent makes; review replies and every other comment stay human-o
    GitHub: review replies are human-owned under
    [docs/developer/genai.md](docs/developer/genai.md).
 6. Wait for CI and get it green. Distinguish real failures from flakes before changing anything.
-   Two known flakes, both fixed by `gh run rerun <id> --failed`: a `proxy.golang.org` stream error
-   during `lint / Lint Go`, and `run_tests` failing in `loki-kafka` or `loki-azure-event-hubs` with
-   `not the leader for some partition`.
+   Known flakes, fixed by `gh run rerun <id> --failed`: a `proxy.golang.org` stream error during
+   `lint / Lint Go`, `TestClusterE2E` on the Mac test job, and, in tests unrelated to the change,
+   `TestLokiSourceAPI` in the k8s suite and `TestDeleteRecreateFile` in `loki.source.file`. The
+   `not the leader for some partition` failures in `loki-kafka` and `loki-azure-event-hubs` should be
+   gone since #7463; treat a recurrence as a regression of that fix. A `lint / Govulncheck` failure is
+   usually a new advisory affecting main too: check main's latest commit before acting, and note
+   that it is not a required check.
 7. Only then report the PR as ready, saying what was run and what was verified.
 
 Record the newest review id before triggering, so a poll can distinguish a new review from the old
@@ -441,7 +476,8 @@ asserts on them. Port the generator with the dependency.
 advertised listeners. Run the producer inside the cluster instead, and make it retry: the Docker
 `loki-kafka` test flakes in CI with `Tried to send a message to a replica that is not the leader for
 some partition`, because the producer connects before leader election settles. Do not carry that
-race over.
+race over. #7463 fixed it for the Docker tests by creating the topics up front and waiting for every
+partition to have a leader before producing. Do the same in the k8s dependency.
 
 **I. Tempo.** There is no Tempo dependency in `deps/` yet. B11 needs one, because
 `otlp_alloy_integration_metrics_test.go` asserts `otelcol_exporter_send_failed_spans_total`. That
@@ -598,8 +634,8 @@ methods twice is wasted churn.
 
 ## After tracks A and B
 
-The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir`, `prom-gen`, `snmp-simulator` and
-`tempo`. `redis`, `mysql` and `postgres` have already gone with their tests.
+The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir`, `snmp-simulator` and `tempo`.
+`redis`, `mysql`, `postgres` and `prom-gen` have already gone with their tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
 directories: `snmp-simulator`, `kafka` and `kafka-gen`.
@@ -619,7 +655,8 @@ The `logpullmock` fixture under `tests/loki-cloudflare` goes away with A14, repl
 
 Track A removes load from CI, because pipeline tests run in process on every pull request and need
 no cluster. Track B adds load. The k8s harness installs every dependency once per test package, at
-about 20 seconds per dependency. There are 16 k8s test packages on main, and CI runs two shards.
+about 20 seconds per dependency. There are 18 k8s test packages on main, including the `sql_server` one added outside this plan in
+#7467, and CI runs two shards.
 
 Watch the wall-clock time as track B lands. When it grows too far, promote Mimir and Loki to
 install-once cluster fixtures. The k8s README already plans for this. Raising the shard count alone
