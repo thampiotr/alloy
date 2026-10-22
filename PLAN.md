@@ -10,9 +10,9 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 Last refreshed 2026-10-22.
 
 - **Done:** 18 of 33 Docker tests have moved. Track A is all merged except A11 and A15.
-- **Open:** nothing.
-- **Next:** A11 `loki-gelf`, then A15 `loki-file-rotation` as a component-level unit test. Then
-  track B. See "Next up" below.
+- **Open:** A11 `loki-gelf` in #7487 and A15 `loki-file-rotation` in #7488. With those, track A is
+  complete.
+- **Next:** track B. See "Next up" below. See "Next up" below.
 - **Docker suite on main:** 15 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -96,8 +96,8 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 18 |
-| Open | 0 |
-| Track A, pending | 2 |
+| Open | 2 |
+| Track A, pending | 0 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
@@ -125,21 +125,18 @@ Done so far:
 | `loki-firehose` | `loki-source-awsfirehose` | pipeline | #7391 |
 | `loki-syslog` | `loki-source-syslog` | pipeline | #7480 |
 
-Nothing is open.
+Open:
+
+- `loki-gelf`, moved to the `loki-source-gelf` pipeline test in #7487.
+- `loki-file-rotation`, moved to `TestFileRotation` in `loki.source.file` in #7488. See note F.
 
 ### Next up
 
-In order. Each is one pull request.
+In order. Each is one pull request. Track A is complete once #7487 and #7488 merge.
 
-1. **A11 `loki-gelf`.** Pipeline test `loki-source-gelf`, sending GELF JSON datagrams with
-   `inputs.udp` and `wait_for: loki.source.gelf.<label>`. Assert the relabeled GELF fields, `host` in
-   structured metadata and not indexed. Small, and unblocked now that #7480 is merged.
-2. **A15 `loki-file-rotation`.** A component-level Go test in `loki.source.file`, run through
-   `componenttest`, with concurrent writers rotating files in a temp directory under the four
-   strategies, asserting exact per-file counts on the receiver. No C6. See note F.
-3. **B10, then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need. See notes
+1. **B10, then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need. See notes
    I and Q.
-4. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
+2. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
    other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
@@ -196,11 +193,11 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3. See note N. | small | done | **merged, #7365** |
 | A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **merged, #7391** |
-| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | no |
+| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | **open, #7487** |
 | A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **merged, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
 | A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **merged, #7343** (with #7353) |
-| A15 | `loki-file-rotation` | **Moving to a component-level unit test**, not C6. See note F. | medium | done | no |
+| A15 | `loki-file-rotation` | **Moved to a component-level unit test**, not C6. See note F. | medium | done | **open, #7488** |
 
 ## Track B: move to a k8s integration test
 
@@ -470,7 +467,9 @@ writers, each rotating every 200 lines, under four strategies (rename, delete, c
 new file), checking that no line is lost or duplicated. Its `loki.process` stage only exists so it
 can count lines per file in Loki. That is the component's own behaviour, not pipeline composition,
 so it moves to a `componenttest` test in `loki.source.file`, with writers in a temp directory and
-exact per-file counts asserted on the receiver.
+exact per-file counts asserted on the receiver. #7488 does this. It also found that the delete
+strategy can lose the last lines written before a delete, which the slower Docker test hid; see
+the follow-up.
 
 Options weighed with Piotr: a plain Go test on the pipeline harness, several YAML files as stages,
 a YAML field naming a Go hook, file actions in YAML, and a Go wrapper around a YAML test. Staged or
@@ -638,6 +637,7 @@ request.
 | Fail loudly on unhealthy components in the pipeline harness | `harness.NewAlloy` waits for load but never checks component health, so a component that cannot bind its port shows up as an assertion timeout rather than its real error. See note A. | small |
 | Opt-in `hold_for` on pipeline test assertions | `Alloy.Assert` returns on the first poll where every assertion passes, so an exact `count` cannot see entries that arrive afterwards, such as a regression that sends duplicates. Add an optional `assert.hold_for` duration: once all assertions pass, they must keep passing for that long. Opt-in per test, not a default, so tests that do not need it stay fast. Low priority, agreed with Piotr: many regressions can slip through silently, and this closes only one of them. | small |
 | Reject unknown fields in pipeline test YAML | `TestPipelines` decodes `test.yaml` with plain `yaml.Unmarshal`, so a misspelled or unsupported field is silently ignored. On A10, a branch without `inputs.http` sent no requests and failed only as "0 entries" after the 30s timeout. Decode with `KnownFields(true)` so the test fails at once and names the field. | small |
+| Investigate lines lost when `loki.source.file` tails a deleted file | Under the delete strategy in `TestFileRotation` (#7488), the last one or two lines written just before the file is deleted were sometimes never read: 599 of 600 across 15 runs. The `tail` package's "deleted while reading" test expects them to be read. A likely cause, unverified, is that the component stops tailing once the file leaves the glob, before draining it. The test currently waits for catch-up before deleting; remove that wait once fixed. Start as an issue. | medium |
 | Bound the HTTP client in `loki-source-api`'s push helpers | `pushJSON` and `pushProto` use `http.Post` and `http.DefaultClient`, which have no timeout, so a stalled port-forward hangs until the test timeout. `graphql` already uses a 5s client. | small |
 
 The two `Query*` items are related and worth doing together, since renaming and re-shaping the same
