@@ -79,7 +79,8 @@ func TestFanoutV2_ConsumerStopped(t *testing.T) {
 		}, "second"),
 	})
 
-	require.NoError(t, fanout.Consume(context.Background(), NewBatch()))
+	// POC: ErrConsumerStopped is returned so the source can retry.
+	require.ErrorIs(t, fanout.Consume(context.Background(), NewBatch()), ErrConsumerStopped)
 }
 
 func TestFanoutV2_ReceiverWithoutConsumer(t *testing.T) {
