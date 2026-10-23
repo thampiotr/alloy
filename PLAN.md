@@ -7,13 +7,12 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 ## Status
 
-Last refreshed 2026-10-22.
+Last refreshed 2026-10-23.
 
-- **Done:** 18 of 33 Docker tests have moved. Track A is all merged except A11 and A15.
-- **Open:** A11 `loki-gelf` in #7487 and A15 `loki-file-rotation` in #7488. With those, track A is
-  complete.
-- **Next:** track B. See "Next up" below. See "Next up" below.
-- **Docker suite on main:** 15 tests. Three stay on Docker (track C) and two
+- **Done:** 20 of 33 Docker tests have moved. Track A is complete.
+- **Open:** none.
+- **Next:** track B, starting with B10. See "Next up" below.
+- **Docker suite on main:** 13 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -95,8 +94,8 @@ on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 18 |
-| Open | 2 |
+| Done | 20 |
+| Open | 0 |
 | Track A, pending | 0 |
 | Track B, pending | 8 |
 | Track C, stays on Docker | 3 |
@@ -124,15 +123,14 @@ Done so far:
 | `loki-heroku` | `loki-source-heroku` | pipeline | #7365 |
 | `loki-firehose` | `loki-source-awsfirehose` | pipeline | #7391 |
 | `loki-syslog` | `loki-source-syslog` | pipeline | #7480 |
+| `loki-gelf` | `loki-source-gelf` | pipeline | #7487 |
+| `loki-file-rotation` | `TestFileRotation` in `loki.source.file`. See note F. | unit | #7488 |
 
-Open:
-
-- `loki-gelf`, moved to the `loki-source-gelf` pipeline test in #7487.
-- `loki-file-rotation`, moved to `TestFileRotation` in `loki.source.file` in #7488. See note F.
+Open: none.
 
 ### Next up
 
-In order. Each is one pull request. Track A is complete once #7487 and #7488 merge.
+In order. Each is one pull request.
 
 1. **B10, then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need. See notes
    I and Q.
@@ -193,11 +191,11 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3. See note N. | small | done | **merged, #7365** |
 | A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **merged, #7391** |
-| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | **open, #7487** |
+| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | #7487 |
 | A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **merged, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
 | A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **merged, #7343** (with #7353) |
-| A15 | `loki-file-rotation` | **Moved to a component-level unit test**, not C6. See note F. | medium | done | **open, #7488** |
+| A15 | `loki-file-rotation` | **Moved to a component-level unit test**, not C6. See note F. | medium | done | #7488 |
 
 ## Track B: move to a k8s integration test
 
