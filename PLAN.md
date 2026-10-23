@@ -191,11 +191,11 @@ was checked and the row reflects it. `todo` means it has not been, so treat the 
 | A8 | `loki-api` | **Moved to track B.** See B15 and note N. | medium | done | **merged, #7312** |
 | A9 | `loki-heroku` | C3. See note N. | small | done | **merged, #7365** |
 | A10 | `loki-firehose` | Reuses C3. The gzipped CloudWatch record is a blob kept honest by a Go test beside `test.yaml`. See note N. | small | done | **merged, #7391** |
-| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | #7487 |
+| A11 | `loki-gelf` | Reuses C4. See notes D and N. | small | done | **merged, #7487** |
 | A12 | `loki-syslog` | C4. See notes D, E and N. | small | done | **merged, #7480** |
 | A13 | `blackbox` | C5. See note O. | medium | done | **merged, #7339** |
 | A14 | `loki-cloudflare` | Reuses C5, with `api_url` from #7353. See note R. | small | done | **merged, #7343** (with #7353) |
-| A15 | `loki-file-rotation` | **Moved to a component-level unit test**, not C6. See note F. | medium | done | #7488 |
+| A15 | `loki-file-rotation` | **Moved to a component-level unit test**, not C6. See note F. | medium | done | **merged, #7488** |
 
 ## Track B: move to a k8s integration test
 
