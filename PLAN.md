@@ -7,10 +7,10 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 ## Status
 
-Last refreshed 2026-10-23.
+Last refreshed 2026-10-26.
 
 - **Done:** 20 of 33 Docker tests have moved. Track A is complete.
-- **Open:** none.
+- **Open:** B10 `otlp-metrics-otel-engine-using-alloyengine-extension` in #7524.
 - **Next:** track B, starting with B10. See "Next up" below.
 - **Docker suite on main:** 13 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
@@ -95,9 +95,9 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 20 |
-| Open | 0 |
+| Open | 1 |
 | Track A, pending | 0 |
-| Track B, pending | 8 |
+| Track B, pending | 7 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -126,13 +126,17 @@ Done so far:
 | `loki-gelf` | `loki-source-gelf` | pipeline | #7487 |
 | `loki-file-rotation` | `TestFileRotation` in `loki.source.file`. See note F. | unit | #7488 |
 
-Open: none.
+Open:
+
+- `otlp-metrics-otel-engine-using-alloyengine-extension`, moved to the `alloyengine-extension` k8s test
+  in #7524, with the `otel-gen` fixture moved to `integration-tests/k8s/fixtures/otel-gen`.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B10, then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need. See notes
+1. **B10 (#7524), then B9 and B11.** B10 builds the `otel-gen` fixture image that all three need,
+   as `make otel-gen-image` and `deps.OtelGen`, with the endpoint as an option. See notes
    I and Q.
 2. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
    other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
@@ -213,7 +217,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | no |
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | no |
-| B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | no |
+| B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **open, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | no |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
 | B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | no |
@@ -585,6 +589,9 @@ and `loadImages` both hardcode `[]string{cfg.alloyImage, promGenImage}`), and a 
 `deps/prom_gen.go` with `OTEL_EXPORTER_ENDPOINT` in its manifest. B11 needs it too, so B10 pays for
 all three.
 
+B10 (#7524) also gave `alloy-otel.yaml` a Service on port 4318, so `otel-gen` can reach an OTLP
+receiver in the config under test. B9 can reuse it once `deps.AlloyOtel` can run `/bin/otelcol`.
+
 **R. `loki-cloudflare` needed a real `api_url` argument.** The first audit counted seven test
 functions and assumed the intake was covered, but every `tailer_test.go` test replaces `getClient`
 with a fake, and none builds the component. The component's only URL override was
@@ -654,7 +661,8 @@ consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` a
 `prometheus-operator` use it through `deps.PromGen`, and the k8s runner and workflow build it with
 `make prom-gen-image`. #7356 moves its source from `integration-tests/docker/configs/prom-gen` to
 `integration-tests/k8s/fixtures/prom-gen`. The first version of this section said to delete it; a
-repo-wide search before deleting caught that. `otel-gen` will likely follow the same path with B10.
+repo-wide search before deleting caught that. `otel-gen` followed the same path in B10 (#7524): its source moved to
+`integration-tests/k8s/fixtures/otel-gen`, and the B9 and B11 Docker tests build it from there until they move.
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
