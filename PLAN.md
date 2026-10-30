@@ -10,8 +10,8 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 Last refreshed 2026-10-30.
 
 - **Done:** 22 of 33 Docker tests have moved. Track A is complete, and B9 and B10 are merged.
-- **Open:** none.
-- **Next:** track B, starting with B11. See "Next up" below.
+- **Open:** B11 `otlp-metrics-default-engine` in #7600.
+- **Next:** track B: B3, B6, B7, B8 and B13, in any order. See "Next up" below.
 - **Docker suite on main:** 11 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -95,9 +95,9 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 22 |
-| Open | 0 |
+| Open | 1 |
 | Track A, pending | 0 |
-| Track B, pending | 6 |
+| Track B, pending | 5 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -128,13 +128,17 @@ Done so far:
 | `otlp-metrics-otel-engine-using-alloyengine-extension` | `alloyengine-extension`; `otel-gen` moved to `integration-tests/k8s/fixtures` | k8s | #7524 |
 | `otlp-metrics-otel-engine` | `otelcol-entrypoint`, with `OtelcolEntrypoint` on `deps.AlloyOtel` | k8s | #7532 |
 
-Open: none.
+Open:
+
+- `otlp-metrics-default-engine`, moved to the `otelcol-default-engine` k8s test in #7600. Traces go
+  to a second `otelcol.receiver.otlp` in the same Alloy instead of Tempo, with a TODO to switch once
+  another test needs a Tempo dep. See note I.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B11.** B9 (#7532) and B10 (#7524) are merged. B10 built the `otel-gen` fixture image that both need,
+1. **B11 (#7600).** B9 (#7532) and B10 (#7524) are merged. B10 built the `otel-gen` fixture image that both need,
    as `make otel-gen-image` and `deps.OtelGen`, with the endpoint as an option. See notes
    I and Q.
 2. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
@@ -217,7 +221,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
-| B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | no |
+| B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | **open, #7600** |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
 | B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | no |
 | B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **merged, #7300** |
@@ -493,6 +497,9 @@ partition to have a leader before producing. Do the same in the k8s dependency.
 **I. Tempo.** There is no Tempo dependency in `deps/` yet. B11 needs one, because
 `otlp_alloy_integration_metrics_test.go` asserts `otelcol_exporter_send_failed_spans_total`. That
 metric only appears when the traces pipeline runs and the deliberately failing exporter fails.
+#7600 skips the Tempo dep: the succeeding trace exporter sends to a second `otelcol.receiver.otlp` in
+the same Alloy, ending in `otelcol.exporter.debug`, and no traces assertion helper was needed. A
+TODO marks the switch to Tempo for when another test needs it.
 
 **J. Native histograms need no support in `QueryMetrics`.** The Docker helper simply does `append(metrics, histogramMetrics...)` and checks names
 against the same `/series` query, so one combined list works. What the Docker test *does* assert
