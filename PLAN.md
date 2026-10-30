@@ -7,12 +7,12 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 ## Status
 
-Last refreshed 2026-10-27.
+Last refreshed 2026-10-30.
 
-- **Done:** 21 of 33 Docker tests have moved. Track A is complete, and B10 is merged.
-- **Open:** B9 `otlp-metrics-otel-engine` in #7532.
-- **Next:** track B: B11 after B9. See "Next up" below.
-- **Docker suite on main:** 12 tests. Three stay on Docker (track C) and two
+- **Done:** 22 of 33 Docker tests have moved. Track A is complete, and B9 and B10 are merged.
+- **Open:** none.
+- **Next:** track B, starting with B11. See "Next up" below.
+- **Docker suite on main:** 11 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -94,8 +94,8 @@ on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 21 |
-| Open | 1 |
+| Done | 22 |
+| Open | 0 |
 | Track A, pending | 0 |
 | Track B, pending | 6 |
 | Track C, stays on Docker | 3 |
@@ -126,18 +126,15 @@ Done so far:
 | `loki-gelf` | `loki-source-gelf` | pipeline | #7487 |
 | `loki-file-rotation` | `TestFileRotation` in `loki.source.file`. See note F. | unit | #7488 |
 | `otlp-metrics-otel-engine-using-alloyengine-extension` | `alloyengine-extension`; `otel-gen` moved to `integration-tests/k8s/fixtures` | k8s | #7524 |
+| `otlp-metrics-otel-engine` | `otelcol-entrypoint`, with `OtelcolEntrypoint` on `deps.AlloyOtel` | k8s | #7532 |
 
-Open:
-
-- `otlp-metrics-otel-engine`, moved to the `otelcol-entrypoint` k8s test in #7532. `deps.AlloyOtel`
-  gained `OtelcolEntrypoint`, and `AlloyConfigPath` is optional. The otel-gen assertions are shared
-  as `deps.AssertOtelGenMetrics`, ready for B11.
+Open: none.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B9 (#7532), then B11.** B10 (#7524, merged) built the `otel-gen` fixture image that both need,
+1. **B11.** B9 (#7532) and B10 (#7524) are merged. B10 built the `otel-gen` fixture image that both need,
    as `make otel-gen-image` and `deps.OtelGen`, with the endpoint as an option. See notes
    I and Q.
 2. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
@@ -218,7 +215,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | no |
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | no |
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
-| B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **open, #7532** |
+| B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | no |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
