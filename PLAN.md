@@ -11,8 +11,8 @@ Last refreshed 2026-11-02.
 
 - **Done:** 23 of 33 Docker tests have moved. Track A is complete, and all three OTel tests (B9, B10
   and B11) are merged.
-- **Open:** none.
-- **Next:** track B: B3, B6, B7, B8 and B13, in any order. See "Next up" below.
+- **Open:** B3 `snmp` (#7606).
+- **Next:** track B: B6, B7, B8 and B13, in any order. See "Next up" below.
 - **Docker suite on main:** 10 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -208,7 +208,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B0 | `loki-file` | Essential path. Unit and pipeline tests cover the read, neither covers the deployed volume mount. Triage question 3. | None. Tails node logs via `discovery.kubernetes` and `alloy.mounts.varlog`, with the existing `log-gen` dep. | small | **merged, #7187** |
 | B1 | `graphql` | Alloy's own HTTP API, behind a CLI flag. | `alloy.extraArgs`, plus port-forwarding on the Alloy dep, since generalised to `ForwardPorts` in #7312. | small | **merged, #7202** |
 | B2 | `redis` | Real Redis. | Redis dep, with the seed as a Job that `Install` waits on. | medium | **merged, #7219** |
-| B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | no |
+| B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | open, #7606 |
 | B4 | `database-observability-mysql` | Real MySQL. | MySQL dep seeded via an init ConfigMap, plus `loki.QueryLogsPresent`. See note P. | medium | **merged, #7220** |
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | no |
