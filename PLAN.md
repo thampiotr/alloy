@@ -7,12 +7,13 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 ## Status
 
-Last refreshed 2026-10-30.
+Last refreshed 2026-11-02.
 
-- **Done:** 22 of 33 Docker tests have moved. Track A is complete, and B9 and B10 are merged.
-- **Open:** B11 `otlp-metrics-default-engine` in #7600.
+- **Done:** 23 of 33 Docker tests have moved. Track A is complete, and all three OTel tests (B9, B10
+  and B11) are merged.
+- **Open:** none.
 - **Next:** track B: B3, B6, B7, B8 and B13, in any order. See "Next up" below.
-- **Docker suite on main:** 11 tests. Three stay on Docker (track C) and two
+- **Docker suite on main:** 10 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -89,13 +90,13 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 15
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 10
 on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 22 |
-| Open | 1 |
+| Done | 23 |
+| Open | 0 |
 | Track A, pending | 0 |
 | Track B, pending | 5 |
 | Track C, stays on Docker | 3 |
@@ -127,21 +128,15 @@ Done so far:
 | `loki-file-rotation` | `TestFileRotation` in `loki.source.file`. See note F. | unit | #7488 |
 | `otlp-metrics-otel-engine-using-alloyengine-extension` | `alloyengine-extension`; `otel-gen` moved to `integration-tests/k8s/fixtures` | k8s | #7524 |
 | `otlp-metrics-otel-engine` | `otelcol-entrypoint`, with `OtelcolEntrypoint` on `deps.AlloyOtel` | k8s | #7532 |
+| `otlp-metrics-default-engine` | `otelcol-default-engine`; traces go to an in-Alloy sink, not Tempo. See note I. | k8s | #7600 |
 
-Open:
-
-- `otlp-metrics-default-engine`, moved to the `otelcol-default-engine` k8s test in #7600. Traces go
-  to a second `otelcol.receiver.otlp` in the same Alloy instead of Tempo, with a TODO to switch once
-  another test needs a Tempo dep. See note I.
+Open: none.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B11 (#7600).** B9 (#7532) and B10 (#7524) are merged. B10 built the `otel-gen` fixture image that both need,
-   as `make otel-gen-image` and `deps.OtelGen`, with the endpoint as an option. See notes
-   I and Q.
-2. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
+1. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
    other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
@@ -221,7 +216,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
-| B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | **open, #7600** |
+| B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | merged, #7600 |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
 | B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | no |
 | B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **merged, #7300** |
@@ -494,7 +489,7 @@ some partition`, because the producer connects before leader election settles. D
 race over. #7463 fixed it for the Docker tests by creating the topics up front and waiting for every
 partition to have a leader before producing. Do the same in the k8s dependency.
 
-**I. Tempo.** There is no Tempo dependency in `deps/` yet. B11 needs one, because
+**I. Tempo.** There is no Tempo dependency in `deps/` yet. B11 needed one, because
 `otlp_alloy_integration_metrics_test.go` asserts `otelcol_exporter_send_failed_spans_total`. That
 metric only appears when the traces pipeline runs and the deliberately failing exporter fails.
 #7600 skips the Tempo dep: the succeeding trace exporter sends to a second `otelcol.receiver.otlp` in
@@ -668,7 +663,7 @@ consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` a
 `make prom-gen-image`. #7356 moves its source from `integration-tests/docker/configs/prom-gen` to
 `integration-tests/k8s/fixtures/prom-gen`. The first version of this section said to delete it; a
 repo-wide search before deleting caught that. `otel-gen` followed the same path in B10 (#7524): its source moved to
-`integration-tests/k8s/fixtures/otel-gen`, and the B9 and B11 Docker tests build it from there until they move.
+`integration-tests/k8s/fixtures/otel-gen`, and B9 (#7532) and B11 (#7600) moved off Docker onto it.
 
 `mimir`, `loki` and `tempo` must stay. The tests in tracks C and D still use them.
 
