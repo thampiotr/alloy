@@ -315,7 +315,8 @@ where both answers are defensible, a fix that would change the PR's scope, or a 
 should know about. A full report goes to the human at the end. The trigger comment is the one
 GitHub post the agent makes; review replies and every other comment stay human-owned.
 
-1. Open the PR as a **draft**.
+1. Open the PR as a **draft**. Put `Related to #6540` in its "Issue(s) fixed by this Pull Request"
+   section, so the PR shows up on the tracking issue.
 2. Request a **Cursor Bugbot** review first, by posting the bare trigger:
    `gh api -X POST repos/grafana/alloy/issues/<n>/comments -f body='@cursor review'`.
    It replies as a review from `cursor[bot]`, typically within about 10 minutes. Bugbot also runs as
