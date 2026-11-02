@@ -7,6 +7,10 @@ Move each test in `integration-tests/docker` to the level where it belongs, as d
 
 ## Status
 
+Keep this section and the progress checklist in the description of #6540 in sync. Whenever the plan
+changes, update both in the same step. In the issue, only change status: checkboxes, PR numbers,
+"open in #n" notes and the counts line. Leave the human-written prose above the checklist alone.
+
 Last refreshed 2026-11-02.
 
 - **Done:** 23 of 33 Docker tests have moved. Track A is complete, and all three OTel tests (B9, B10
