@@ -13,11 +13,11 @@ changes, update both in the same step. In the issue, only change status: checkbo
 
 Last refreshed 2026-11-02.
 
-- **Done:** 23 of 33 Docker tests have moved. Track A is complete, and all three OTel tests (B9, B10
-  and B11) are merged.
-- **Open:** B3 `snmp` (#7606).
+- **Done:** 24 of 33 Docker tests have moved. Track A is complete, and B3 and all three OTel tests
+  (B9, B10 and B11) are merged.
+- **Open:** none.
 - **Next:** track B: B6, B7, B8 and B13, in any order. See "Next up" below.
-- **Docker suite on main:** 10 tests. Three stay on Docker (track C) and two
+- **Docker suite on main:** 9 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -94,15 +94,15 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 10
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 9
 on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 23 |
+| Done | 24 |
 | Open | 0 |
 | Track A, pending | 0 |
-| Track B, pending | 5 |
+| Track B, pending | 4 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -133,6 +133,7 @@ Done so far:
 | `otlp-metrics-otel-engine-using-alloyengine-extension` | `alloyengine-extension`; `otel-gen` moved to `integration-tests/k8s/fixtures` | k8s | #7524 |
 | `otlp-metrics-otel-engine` | `otelcol-entrypoint`, with `OtelcolEntrypoint` on `deps.AlloyOtel` | k8s | #7532 |
 | `otlp-metrics-default-engine` | `otelcol-default-engine`; traces go to an in-Alloy sink, not Tempo. See note I. | k8s | #7600 |
+| `snmp` | `prometheus-exporter-snmp`, with a `deps.SNMPSim` dep preloaded into kind | k8s | #7606 |
 
 Open: none.
 
@@ -140,7 +141,7 @@ Open: none.
 
 In order. Each is one pull request.
 
-1. **B3 `snmp`, B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
+1. **B6 `kafka`, B7 `loki-kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
    other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
@@ -212,7 +213,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B0 | `loki-file` | Essential path. Unit and pipeline tests cover the read, neither covers the deployed volume mount. Triage question 3. | None. Tails node logs via `discovery.kubernetes` and `alloy.mounts.varlog`, with the existing `log-gen` dep. | small | **merged, #7187** |
 | B1 | `graphql` | Alloy's own HTTP API, behind a CLI flag. | `alloy.extraArgs`, plus port-forwarding on the Alloy dep, since generalised to `ForwardPorts` in #7312. | small | **merged, #7202** |
 | B2 | `redis` | Real Redis. | Redis dep, with the seed as a Job that `Install` waits on. | medium | **merged, #7219** |
-| B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | open, #7606 |
+| B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | merged, #7606 |
 | B4 | `database-observability-mysql` | Real MySQL. | MySQL dep seeded via an init ConfigMap, plus `loki.QueryLogsPresent`. See note P. | medium | **merged, #7220** |
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | no |
@@ -656,11 +657,12 @@ methods twice is wasted churn.
 
 ## After tracks A and B
 
-The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir`, `snmp-simulator` and `tempo`.
-`redis`, `mysql`, `postgres` and `prom-gen` have already gone with their tests.
+The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir` and `tempo`.
+`redis`, `mysql`, `postgres`, `prom-gen` and `snmp-simulator` (#7606) have already gone with their
+tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
-directories: `snmp-simulator`, `kafka` and `kafka-gen`.
+directories: `kafka` and `kafka-gen`.
 
 `prom-gen` is different. #7355 deletes its compose service, because `prom-enrich` was its last Docker
 consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` and
