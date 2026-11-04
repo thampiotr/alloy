@@ -13,12 +13,12 @@ changes, update both in the same step. In the issue, only change status: checkbo
 
 Last refreshed 2026-11-04.
 
-- **Done:** 25 of 33 Docker tests have moved. Track A is complete, and B3, B7 and all three OTel tests
-  (B9, B10 and B11) are merged.
-- **Open:** B6 `kafka` (#7638), B8 `loki-gcplog` (#7640) and B13 `unix` (#7639).
-- **Next:** none in track B. Once the open PRs merge, delete the leftover compose services. See
+- **Done:** 27 of 33 Docker tests have moved. Track A is complete, and B3, B6, B7, B13 and all three
+  OTel tests (B9, B10 and B11) are merged.
+- **Open:** B8 `loki-gcplog` (#7640).
+- **Next:** none in track B. Once #7640 merges, delete the leftover compose services. See
   "After tracks A and B".
-- **Docker suite on main:** 8 tests. Three stay on Docker (track C) and two
+- **Docker suite on main:** 6 tests. One waits on #7640, three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -100,8 +100,8 @@ on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 25 |
-| Open | 3 |
+| Done | 27 |
+| Open | 1 |
 | Track A, pending | 0 |
 | Track B, pending | 0 |
 | Track C, stays on Docker | 3 |
@@ -136,15 +136,11 @@ Done so far:
 | `otlp-metrics-default-engine` | `otelcol-default-engine`; traces go to an in-Alloy sink, not Tempo. See note I. | k8s | #7600 |
 | `snmp` | `prometheus-exporter-snmp`, with a `deps.SNMPSim` dep preloaded into kind | k8s | #7606 |
 | `loki-kafka` | `loki-source-kafka`; `deps.Kafka` gains `Partitions`, the leader wait from note H, and `ProduceKeyed` | k8s | #7612 |
+| `kafka` | `prometheus-exporter-kafka`; a new `deps.KafkaGen` runs the broker image's console producer and consumer. See note G. | k8s | #7638 |
+| `unix` | `prometheus-exporter-unix`; `static.prom` reaches `/etc/alloy` through `ExtraFiles` on `deps.Alloy`, and the pod runs unprivileged. See note K. | k8s | #7639 |
 
 Open:
 
-- `kafka`, moved to the `prometheus-exporter-kafka` k8s test in #7638. A new `deps.KafkaGen` runs
-  Kafka's console producer and consumer from the broker image, instead of porting the Go generator.
-  See note G.
-- `unix`, moved to the `prometheus-exporter-unix` k8s test in #7639. `static.prom` reaches
-  `/etc/alloy` through a new `ExtraFiles` option on `deps.Alloy`. The pod runs unprivileged and every
-  expected metric still arrives on a kind node. See note K.
 - `loki-gcplog`, split in #7640. The push receiver becomes the `loki-source-gcplog` pipeline test, and
   the pull receiver the `loki-source-gcplog` k8s test with a new `deps.PubSubEmulator`.
 
@@ -152,7 +148,7 @@ Open:
 
 In order. Each is one pull request.
 
-None left in track B. B6, B8 and B13 are open.
+None left in track B. B8 is open.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -225,14 +221,14 @@ The assertion is about a third-party system, or about an engine or configuration
 | B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | merged, #7606 |
 | B4 | `database-observability-mysql` | Real MySQL. | MySQL dep seeded via an init ConfigMap, plus `loki.QueryLogsPresent`. See note P. | medium | **merged, #7220** |
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
-| B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | open, #7638 |
+| B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | merged, #7638 |
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | merged, #7612 |
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | open, #7640 |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | merged, #7600 |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
-| B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | open, #7639 |
+| B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | merged, #7639 |
 | B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **merged, #7300** |
 | B15 | `loki-api` | A push receiver exposed through a Service via `alloy.extraPorts`. The intake itself is unit-tested. | `ForwardPorts` on the Alloy dep, and `loki.QueryLabelsNotIndexed`. | medium | **merged, #7312** |
 
@@ -667,12 +663,12 @@ methods twice is wasted churn.
 
 ## After tracks A and B
 
-The compose file on main runs `kafka`, `kafka-gen`, `loki`, `mimir` and `tempo`.
+The compose file on main runs `kafka`, `loki`, `mimir` and `tempo`. #7638 deleted `kafka-gen`.
 `redis`, `mysql`, `postgres`, `prom-gen` and `snmp-simulator` (#7606) have already gone with their
 tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
-directories: `kafka` and `kafka-gen`.
+directories: `kafka`, and its wait in `integration-tests/docker/main.go`.
 
 `prom-gen` is different. #7355 deletes its compose service, because `prom-enrich` was its last Docker
 consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` and
