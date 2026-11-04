@@ -11,13 +11,13 @@ Keep this section and the progress checklist in the description of #6540 in sync
 changes, update both in the same step. In the issue, only change status: checkboxes, PR numbers,
 "open in #n" notes and the counts line. Leave the human-written prose above the checklist alone.
 
-Last refreshed 2026-11-02.
+Last refreshed 2026-11-04.
 
-- **Done:** 24 of 33 Docker tests have moved. Track A is complete, and B3 and all three OTel tests
+- **Done:** 25 of 33 Docker tests have moved. Track A is complete, and B3, B7 and all three OTel tests
   (B9, B10 and B11) are merged.
-- **Open:** B7 `loki-kafka` (#7612).
+- **Open:** none.
 - **Next:** track B: B6, B8 and B13, in any order. See "Next up" below.
-- **Docker suite on main:** 9 tests. Three stay on Docker (track C) and two
+- **Docker suite on main:** 8 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
 ## The triage rule
@@ -94,13 +94,13 @@ it. The order below is chosen so that each step adds at most one new capability.
 
 ## Scope and progress
 
-Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 9
+Thirty-three Docker tests existed when this work started. `integration-tests/docker/tests` holds 8
 on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 24 |
-| Open | 1 |
+| Done | 25 |
+| Open | 0 |
 | Track A, pending | 0 |
 | Track B, pending | 3 |
 | Track C, stays on Docker | 3 |
@@ -134,18 +134,16 @@ Done so far:
 | `otlp-metrics-otel-engine` | `otelcol-entrypoint`, with `OtelcolEntrypoint` on `deps.AlloyOtel` | k8s | #7532 |
 | `otlp-metrics-default-engine` | `otelcol-default-engine`; traces go to an in-Alloy sink, not Tempo. See note I. | k8s | #7600 |
 | `snmp` | `prometheus-exporter-snmp`, with a `deps.SNMPSim` dep preloaded into kind | k8s | #7606 |
+| `loki-kafka` | `loki-source-kafka`; `deps.Kafka` gains `Partitions`, the leader wait from note H, and `ProduceKeyed` | k8s | #7612 |
 
-Open:
-
-- `loki-kafka`, moved to the `loki-source-kafka` k8s test in #7612. `deps.Kafka` gains a `Partitions`
-  option, the leader wait from note H, and `ProduceKeyed`.
+Open: none.
 
 ### Next up
 
 In order. Each is one pull request.
 
 1. **B6 `kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
-   other. For the Kafka pair, reuse the topic pre-creation from #7463. For B8, the push half can be a
+   other. For B6, reuse `deps.Kafka` from #7612, which already pre-creates topics and waits for leaders. For B8, the push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
@@ -220,7 +218,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B4 | `database-observability-mysql` | Real MySQL. | MySQL dep seeded via an init ConfigMap, plus `loki.QueryLogsPresent`. See note P. | medium | **merged, #7220** |
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | no |
-| B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | open, #7612 |
+| B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | merged, #7612 |
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
