@@ -15,8 +15,9 @@ Last refreshed 2026-11-04.
 
 - **Done:** 25 of 33 Docker tests have moved. Track A is complete, and B3, B7 and all three OTel tests
   (B9, B10 and B11) are merged.
-- **Open:** B6 `kafka` (#7638) and B13 `unix` (#7639).
-- **Next:** track B: B8. See "Next up" below.
+- **Open:** B6 `kafka` (#7638), B8 `loki-gcplog` (#7640) and B13 `unix` (#7639).
+- **Next:** none in track B. Once the open PRs merge, delete the leftover compose services. See
+  "After tracks A and B".
 - **Docker suite on main:** 8 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -100,9 +101,9 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 25 |
-| Open | 2 |
+| Open | 3 |
 | Track A, pending | 0 |
-| Track B, pending | 1 |
+| Track B, pending | 0 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -144,13 +145,14 @@ Open:
 - `unix`, moved to the `prometheus-exporter-unix` k8s test in #7639. `static.prom` reaches
   `/etc/alloy` through a new `ExtraFiles` option on `deps.Alloy`. The pod runs unprivileged and every
   expected metric still arrives on a kind node. See note K.
+- `loki-gcplog`, split in #7640. The push receiver becomes the `loki-source-gcplog` pipeline test, and
+  the pull receiver the `loki-source-gcplog` k8s test with a new `deps.PubSubEmulator`.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B8 `loki-gcplog`.** The push half can be a
-   pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
+None left in track B. B6, B8 and B13 are open.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -225,7 +227,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | open, #7638 |
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | merged, #7612 |
-| B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
+| B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | open, #7640 |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | merged, #7600 |
