@@ -15,7 +15,7 @@ Last refreshed 2026-11-04.
 
 - **Done:** 27 of 33 Docker tests have moved. Track A is complete, and B3, B6, B7, B13 and all three
   OTel tests (B9, B10 and B11) are merged.
-- **Open:** B8 `loki-gcplog` (#7640).
+- **Open:** B8 `loki-gcplog` (#7640) and track D `beyla` (#7643).
 - **Next:** none in track B. Once #7640 merges, delete the leftover compose services. See
   "After tracks A and B".
 - **Docker suite on main:** 6 tests. One waits on #7640, three stay on Docker (track C) and two
@@ -244,7 +244,7 @@ The assertion is about a third-party system, or about an engine or configuration
 
 | Test | Effort | What to decide |
 | --- | --- | --- |
-| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. |
+| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind on the Mac with `hostPID` and `privileged` only, no extra mounts. Open in #7643, which also has to pass on GitHub's Ubuntu runner. |
 | `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. |
 
 ## Definition of done for one step
