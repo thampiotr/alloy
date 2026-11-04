@@ -15,8 +15,8 @@ Last refreshed 2026-11-04.
 
 - **Done:** 25 of 33 Docker tests have moved. Track A is complete, and B3, B7 and all three OTel tests
   (B9, B10 and B11) are merged.
-- **Open:** B6 `kafka` (#7638).
-- **Next:** track B: B8 and B13, in any order. See "Next up" below.
+- **Open:** B6 `kafka` (#7638) and B13 `unix` (#7639).
+- **Next:** track B: B8. See "Next up" below.
 - **Docker suite on main:** 8 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -100,9 +100,9 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 25 |
-| Open | 1 |
+| Open | 2 |
 | Track A, pending | 0 |
-| Track B, pending | 2 |
+| Track B, pending | 1 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -141,12 +141,15 @@ Open:
 - `kafka`, moved to the `prometheus-exporter-kafka` k8s test in #7638. A new `deps.KafkaGen` runs
   Kafka's console producer and consumer from the broker image, instead of porting the Go generator.
   See note G.
+- `unix`, moved to the `prometheus-exporter-unix` k8s test in #7639. `static.prom` reaches
+  `/etc/alloy` through a new `ExtraFiles` option on `deps.Alloy`. The pod runs unprivileged and every
+  expected metric still arrives on a kind node. See note K.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B8 `loki-gcplog`, B13 `unix`.** Independent of each other. For B8, the push half can be a
+1. **B8 `loki-gcplog`.** The push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
@@ -227,7 +230,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | merged, #7600 |
 | B12 | `otlp-metadata` | Mimir's OTLP endpoint and metadata API. | `mimir.QueryHistograms`, and a cardinality check in `QueryMetadata`. See note J. Renamed and extended by B14. | small | **merged, #7215** |
-| B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | no |
+| B13 | `unix` | A pinned Linux kernel. See note K. | Host access and a textfile directory. | medium | open, #7639 |
 | B14 | `scrape-prom-metrics` | Remote write v1, v2 and OTLP against a real backend, where wire compatibility is what matters. | Renames B12's test to `prometheus-write-paths` and adds both remote write paths. See note C. | small | **merged, #7300** |
 | B15 | `loki-api` | A push receiver exposed through a Service via `alloy.extraPorts`. The intake itself is unit-tested. | `ForwardPorts` on the Alloy dep, and `loki.QueryLabelsNotIndexed`. | medium | **merged, #7312** |
 
