@@ -244,7 +244,7 @@ The assertion is about a third-party system, or about an engine or configuration
 
 | Test | Effort | What to decide |
 | --- | --- | --- |
-| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind on the Mac with `hostPID` and `privileged` only, no extra mounts. Open in #7643, which also has to pass on GitHub's Ubuntu runner. |
+| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind with `hostPID` and `privileged` only, no extra mounts, both on the Mac and on GitHub's Ubuntu runner. Open in #7643. |
 | `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. |
 
 ## Definition of done for one step
