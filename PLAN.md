@@ -15,8 +15,8 @@ Last refreshed 2026-11-04.
 
 - **Done:** 25 of 33 Docker tests have moved. Track A is complete, and B3, B7 and all three OTel tests
   (B9, B10 and B11) are merged.
-- **Open:** none.
-- **Next:** track B: B6, B8 and B13, in any order. See "Next up" below.
+- **Open:** B6 `kafka` (#7638).
+- **Next:** track B: B8 and B13, in any order. See "Next up" below.
 - **Docker suite on main:** 8 tests. Three stay on Docker (track C) and two
   wait on an eBPF decision (track D).
 
@@ -100,9 +100,9 @@ on main today.
 | State | Count |
 | --- | --- |
 | Done | 25 |
-| Open | 0 |
+| Open | 1 |
 | Track A, pending | 0 |
-| Track B, pending | 3 |
+| Track B, pending | 2 |
 | Track C, stays on Docker | 3 |
 | Track D, decide later | 2 |
 
@@ -136,14 +136,17 @@ Done so far:
 | `snmp` | `prometheus-exporter-snmp`, with a `deps.SNMPSim` dep preloaded into kind | k8s | #7606 |
 | `loki-kafka` | `loki-source-kafka`; `deps.Kafka` gains `Partitions`, the leader wait from note H, and `ProduceKeyed` | k8s | #7612 |
 
-Open: none.
+Open:
+
+- `kafka`, moved to the `prometheus-exporter-kafka` k8s test in #7638. A new `deps.KafkaGen` runs
+  Kafka's console producer and consumer from the broker image, instead of porting the Go generator.
+  See note G.
 
 ### Next up
 
 In order. Each is one pull request.
 
-1. **B6 `kafka`, B8 `loki-gcplog`, B13 `unix`.** Independent of each
-   other. For B6, reuse `deps.Kafka` from #7612, which already pre-creates topics and waits for leaders. For B8, the push half can be a
+1. **B8 `loki-gcplog`, B13 `unix`.** Independent of each other. For B8, the push half can be a
    pipeline test with C3 like `loki-heroku`, which leaves only the pull path at k8s level.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
@@ -217,7 +220,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B3 | `snmp` | Real SNMP agent. | snmpsim dep. UDP stays inside the cluster. | medium | merged, #7606 |
 | B4 | `database-observability-mysql` | Real MySQL. | MySQL dep seeded via an init ConfigMap, plus `loki.QueryLogsPresent`. See note P. | medium | **merged, #7220** |
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
-| B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | no |
+| B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | open, #7638 |
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | merged, #7612 |
 | B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | no |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
@@ -487,7 +490,8 @@ starts, would still be a reasonable future capability for users.
 
 **G. Kafka generator.** The compose stack runs `kafka-gen`, which produces to and consumes from
 `test_topic`. Without it the exporter reports no `kafka_consumergroup_*` metrics, and the test
-asserts on them. Port the generator with the dependency.
+asserts on them. Port the generator with the dependency. #7638 does not port it: `deps.KafkaGen` runs the console
+producer and consumer from the broker image, which needs no extra fixture image.
 
 **H. Kafka producer location.** Producing from the host through a port-forward fights Kafka
 advertised listeners. Run the producer inside the cluster instead, and make it retry: the Docker
