@@ -15,7 +15,7 @@ Last refreshed 2026-11-05.
 
 - **Done:** 29 of 33 Docker tests have moved. Tracks A and B are complete, and `beyla` from track D
   is merged too (#7643).
-- **Open:** none.
+- **Open:** removing the `kafka` compose service, open in #7654.
 - **Next:** delete the leftover `kafka` compose service. See "After tracks A and B". `beyla-java` is
   now unblocked in track D.
 - **Docker suite on main:** 4 tests. Three stay on Docker (track C) and `beyla-java` waits in
@@ -667,7 +667,7 @@ The compose file on main runs `kafka`, `loki`, `mimir` and `tempo`. #7638 delete
 tests.
 
 Once tracks A and B are done, these have no consumer left, so delete them and their config
-directories: `kafka`, and its wait in `integration-tests/docker/main.go`.
+directories: `kafka`, and its wait in `integration-tests/docker/main.go`. Open in #7654.
 
 `prom-gen` is different. #7355 deletes its compose service, because `prom-enrich` was its last Docker
 consumer, but the fixture itself stays. The k8s tests `prometheus-write-paths` and
