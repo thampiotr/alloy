@@ -15,9 +15,9 @@ Last refreshed 2026-11-05.
 
 - **Done:** 29 of 33 Docker tests have moved. Tracks A and B are complete, and `beyla` from track D
   is merged too (#7643).
-- **Open:** removing the `kafka` compose service, open in #7654.
-- **Next:** delete the leftover `kafka` compose service. See "After tracks A and B". `beyla-java` is
-  now unblocked in track D.
+- **Open:** removing the `kafka` compose service (#7654), and `beyla-java` with the `tempo` compose
+  service (#7655).
+- **Next:** none. Once #7654 and #7655 merge, only track C is left.
 - **Docker suite on main:** 4 tests. Three stay on Docker (track C) and `beyla-java` waits in
   track D.
 
@@ -244,7 +244,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | Test | Effort | What to decide |
 | --- | --- | --- |
 | `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind with `hostPID` and `privileged` only, no extra mounts, both on the Mac and on GitHub's Ubuntu runner. Merged in #7643. |
-| `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. Unblocked: `beyla` merged in #7643. |
+| `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. Open in #7655. The Docker test never proved SDK-injected spans: Tempo's search reads only the first repeated `tags` parameter, and the injected agent has no OTel SDK. The k8s test asserts the JVM runtime metrics that only the attached agent reports instead. |
 
 ## Definition of done for one step
 
