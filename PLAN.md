@@ -11,15 +11,15 @@ Keep this section and the progress checklist in the description of #6540 in sync
 changes, update both in the same step. In the issue, only change status: checkboxes, PR numbers,
 "open in #n" notes and the counts line. Leave the human-written prose above the checklist alone.
 
-Last refreshed 2026-11-04.
+Last refreshed 2026-11-05.
 
-- **Done:** 27 of 33 Docker tests have moved. Track A is complete, and B3, B6, B7, B13 and all three
-  OTel tests (B9, B10 and B11) are merged.
-- **Open:** B8 `loki-gcplog` (#7640) and track D `beyla` (#7643).
-- **Next:** none in track B. Once #7640 merges, delete the leftover compose services. See
-  "After tracks A and B".
-- **Docker suite on main:** 6 tests. One waits on #7640, three stay on Docker (track C) and two
-  wait on an eBPF decision (track D).
+- **Done:** 29 of 33 Docker tests have moved. Tracks A and B are complete, and `beyla` from track D
+  is merged too (#7643).
+- **Open:** none.
+- **Next:** delete the leftover `kafka` compose service. See "After tracks A and B". `beyla-java` is
+  now unblocked in track D.
+- **Docker suite on main:** 4 tests. Three stay on Docker (track C) and `beyla-java` waits in
+  track D.
 
 ## The triage rule
 
@@ -100,12 +100,12 @@ on main today.
 
 | State | Count |
 | --- | --- |
-| Done | 27 |
-| Open | 1 |
+| Done | 29 |
+| Open | 0 |
 | Track A, pending | 0 |
 | Track B, pending | 0 |
 | Track C, stays on Docker | 3 |
-| Track D, decide later | 2 |
+| Track D, decide later | 1 |
 
 Done so far:
 
@@ -138,17 +138,16 @@ Done so far:
 | `loki-kafka` | `loki-source-kafka`; `deps.Kafka` gains `Partitions`, the leader wait from note H, and `ProduceKeyed` | k8s | #7612 |
 | `kafka` | `prometheus-exporter-kafka`; a new `deps.KafkaGen` runs the broker image's console producer and consumer. See note G. | k8s | #7638 |
 | `unix` | `prometheus-exporter-unix`; `static.prom` reaches `/etc/alloy` through `ExtraFiles` on `deps.Alloy`, and the pod runs unprivileged. See note K. | k8s | #7639 |
+| `loki-gcplog` | `loki-source-gcplog`, split: the push receiver as a pipeline test, the pull receiver as a k8s test with a new `deps.PubSubEmulator` | pipeline and k8s | #7640 |
+| `beyla` | `beyla-ebpf`; Alloy runs with `hostPID` and a privileged container, no extra mounts | k8s | #7643 |
 
-Open:
-
-- `loki-gcplog`, split in #7640. The push receiver becomes the `loki-source-gcplog` pipeline test, and
-  the pull receiver the `loki-source-gcplog` k8s test with a new `deps.PubSubEmulator`.
+Open: none.
 
 ### Next up
 
 In order. Each is one pull request.
 
-None left in track B. B8 is open.
+None left in track B.
 
 Stop after tracks A and B. Do not start track C or D work as part of this plan.
 
@@ -223,7 +222,7 @@ The assertion is about a third-party system, or about an engine or configuration
 | B5 | `database-observability-postgres` | Real Postgres. | Postgres dep with `pg_stat_statements` preloaded and a `monitoring_user` role. | medium | **merged, #7221** |
 | B6 | `kafka` | Real Kafka. | Kafka dep, plus a message generator for consumer group metrics. See notes G and H. | medium | merged, #7638 |
 | B7 | `loki-kafka` | Real Kafka. | An in-cluster producer. See note H. | medium | merged, #7612 |
-| B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | open, #7640 |
+| B8 | `loki-gcplog` | Pub/Sub emulator for the pull path. | Pub/Sub emulator dep. The push path can use `ForwardPorts`, as `loki-source-api` does. | medium | merged, #7640 |
 | B9 | `otlp-metrics-otel-engine` | The standalone `/bin/otelcol` binary. | Reuses B10's `otel-gen`, but needs a way to run `/bin/otelcol`. See note Q. | medium | **merged, #7532** |
 | B10 | `otlp-metrics-otel-engine-using-alloyengine-extension` | The alloyengine extension. | An `otel-gen` fixture image. `deps.AlloyOtel` already fits this test exactly. See note Q. | medium | **merged, #7524** |
 | B11 | `otlp-metrics-default-engine` | Real Mimir and Tempo. | Tempo dep and a traces assertion helper. See note I. | medium | merged, #7600 |
@@ -244,8 +243,8 @@ The assertion is about a third-party system, or about an engine or configuration
 
 | Test | Effort | What to decide |
 | --- | --- | --- |
-| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind with `hostPID` and `privileged` only, no extra mounts, both on the Mac and on GitHub's Ubuntu runner. Open in #7643. |
-| `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. |
+| `beyla` | high | The chart supports `hostPID` and `privileged`, and Beyla on k8s is the primary real deployment, so the value is high. The risk is also high: eBPF on kind nodes needs the right kernel, plus `debugfs` and `bpf` mounts. Prove eBPF works in kind first. Keep Docker until then. **Spike:** eBPF works in kind with `hostPID` and `privileged` only, no extra mounts, both on the Mac and on GitHub's Ubuntu runner. Merged in #7643. |
+| `beyla-java` | high | Adds the OBI Java agent injector attaching into a JVM in a separate container. Do this only after `beyla` works. Unblocked: `beyla` merged in #7643. |
 
 ## Definition of done for one step
 
